@@ -55,14 +55,6 @@ export class NodeServer implements MessagePublisher, MessageSubscriber {
   }
 
   private handleNewClient(socket: tls.TLSSocket): void {
-    console.log(
-      socket.localAddress,
-      socket.remoteAddress,
-      socket.localPort,
-      socket.remotePort,
-      socket.address(),
-    );
-
     const id = NodeServer.getClientId(socket);
     if (id === undefined) {
       console.error("Invalid ID");

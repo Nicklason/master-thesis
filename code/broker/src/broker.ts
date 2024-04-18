@@ -107,11 +107,13 @@ export class Broker {
       });
 
       setInterval(() => {
-        measureLatency(client, this.server).then((latency) => {
-          console.log("Latency to " + client.getTheirId() + ": " + latency);
-        }).catch((err) => {
-          console.error(err);
-        });
+        measureLatency(client, this.server)
+          .then((latency) => {
+            console.log("Latency to " + client.getTheirId() + ": " + latency);
+          })
+          .catch((err) => {
+            console.error(err);
+          });
       }, 1000).unref();
     }
 
@@ -151,7 +153,6 @@ export class Broker {
     }
 
     // TODO: Queue messages for delivery and save it to disk
-    
     if (!message.isBroadcast()) {
       const destination = message.destinations[0];
 
@@ -163,7 +164,7 @@ export class Broker {
       client.publish(message);
     } else {
       this.broadcast(message);
-    }    
+    }
   }
 
   private getClientByID(id: number): NodeClient | undefined {

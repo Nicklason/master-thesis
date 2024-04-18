@@ -56,7 +56,7 @@ export class NodeClient implements Peer {
 
   getTheirId(): number {
     if (this.theirId === null) {
-      throw new Error("Client has not yet been connected");     
+      throw new Error("Client has not yet been connected");
     }
 
     return this.theirId;
