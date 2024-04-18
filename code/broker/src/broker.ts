@@ -107,6 +107,10 @@ export class Broker {
       });
 
       setInterval(() => {
+        if (!client.hasConnected()) {
+          return;
+        }
+
         measureLatency(client, this.server)
           .then((latency) => {
             console.log("Latency to " + client.getTheirId() + ": " + latency);
@@ -171,7 +175,7 @@ export class Broker {
     for (let i = 0; i < this.clients.length; i++) {
       const client = this.clients[i];
 
-      if (client.getTheirId() === id) {
+      if (client.hasConnected() && client.getTheirId() === id) {
         return client;
       }
     }

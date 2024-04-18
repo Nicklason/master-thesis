@@ -24,6 +24,8 @@ export class NodeClient implements Peer {
   private client: tls.TLSSocket | null = null;
   // Indicates whether we are connected to the peer
   private connected = false;
+  // Indicates whether we have ever been connected to the peer
+  private hasBeenConnected = false;
   // The id of the node we connect to. Set when the connection is established
   private theirId: number | null = null;
   // Our id. Set when the client is made
@@ -60,6 +62,10 @@ export class NodeClient implements Peer {
     }
 
     return this.theirId;
+  }
+
+  hasConnected(): boolean {
+    return this.hasBeenConnected !== null;
   }
 
   getOurId(): number {
@@ -197,6 +203,7 @@ export class NodeClient implements Peer {
     }
 
     this.connected = true;
+    this.hasBeenConnected = true;
 
     this.eventEmitter.emit("connected");
 
