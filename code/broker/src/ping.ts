@@ -18,6 +18,11 @@ export async function measureLatency(
   return new Promise((resolve, reject) => {
     let start: bigint;
 
+    const cleanup = () => {
+        subscriber.off("message", listener);
+        clearTimeout(timeout);
+    };
+
     const timeout = setTimeout(() => {
       cleanup();
       reject(new Error("Timeout reached while waiting for pong message"));
@@ -50,10 +55,6 @@ export async function measureLatency(
       resolve(latency);
     };
 
-    const cleanup = () => {
-      subscriber.off("message", listener);
-      clearTimeout(timeout);
-    };
 
     subscriber.on("message", listener);
 
