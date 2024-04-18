@@ -150,14 +150,6 @@ export class Broker {
       client.publish(pong);
     }
 
-    if (
-      type === MessageType.CLIENT_HELLO ||
-      type === MessageType.SERVER_HELLO
-    ) {
-      // Do not broadcast hello messages
-      return;
-    }
-
     // TODO: Queue messages for delivery and save it to disk
     
     if (!message.isBroadcast()) {

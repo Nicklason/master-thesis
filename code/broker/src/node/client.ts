@@ -200,7 +200,7 @@ export class NodeClient implements Peer {
 
     this.eventEmitter.emit("connected");
 
-    this.publish(MessageFactory.clientHello());
+    this.publish(MessageFactory.clientHello(this.getTheirId()));
   }
 
   private handleDisconnected(): void {

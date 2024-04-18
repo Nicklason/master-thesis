@@ -73,7 +73,7 @@ export class NodeServer implements MessagePublisher, MessageSubscriber {
     this.eventEmitter.emit("connected", id);
     this.addClient(socket);
 
-    this.publish(MessageFactory.serverHello());
+    this.publish(MessageFactory.serverHello(id));
 
     socket.on("data", (data) => {
       this.handleData(socket, data);
