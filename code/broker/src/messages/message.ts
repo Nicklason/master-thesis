@@ -112,6 +112,46 @@ const root = protobuf.Root.fromJSON({
     NetworkMessagePayload: {
       fields: {},
     },
+    TopologyMessagePayload: {
+      fields: {
+        nodes: {
+          type: "uint32",
+          id: 1,
+          rule: "repeated",
+        },
+        edges: {
+          type: "LinkChange",
+          id: 2,
+          rule: "repeated",
+        },
+      },
+    },
+    LinkState: {
+      values: {
+        UP: 0,
+        DOWN: 1,
+      },
+    },
+    LinkChange: {
+      fields: {
+        state: {
+          id: 1,
+          type: "LinkState",
+        },
+        source: {
+          type: "uint32",
+          id: 2,
+        },
+        target: {
+          type: "uint32",
+          id: 3,
+        },
+        timestamp: {
+          type: "uint64",
+          id: 4,
+        },
+      },
+    },
   },
 });
 
@@ -136,6 +176,8 @@ export enum MessageType {
   DATA = 9,
   // Contains information about parts of the network (nodes, edges, etc. and their metadata)
   NETWORK = 10,
+  // Contains information about the entire network
+  TOPOLOGY = 11,
 }
 
 export interface DecodedMessage<
@@ -197,6 +239,10 @@ export class Message<T extends MessageType = MessageType> {
 
   isDestination(node: number): boolean {
     return this.isBroadcast() || this.destinations.includes(node);
+  }
+
+  isFinalDestination(node: number): boolean {
+    return this.destinations.includes(node);
   }
 
   isBroadcast(): boolean {
@@ -281,6 +327,25 @@ export interface NodeDisconnectMessagePayload {
   node_id: number;
 }
 
+export type Node = number;
+
+export enum LinkState {
+  UP = 1,
+  DOWN = 2,
+}
+
+export interface LinkChange {
+  state: LinkState;
+  source: Node;
+  target: Node;
+  timestamp: number;
+}
+
+export interface TopologyMessagePayload {
+  nodes: number[];
+  edges: LinkChange[];
+}
+
 export type MessagePayload = {
   [MessageType.SERVER_HELLO]: null;
   [MessageType.CLIENT_HELLO]: null;
@@ -292,6 +357,7 @@ export type MessagePayload = {
   [MessageType.SUBSCRIBE_TOPIC]: null;
   [MessageType.DATA]: DataMessagePayload;
   [MessageType.NETWORK]: null;
+  [MessageType.TOPOLOGY]: TopologyMessagePayload;
 };
 
 const MessageProto = root.lookupType("Message");

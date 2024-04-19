@@ -5,6 +5,7 @@ import {
   PayloadNotRequiredMessageType,
   PayloadRequiredMessageType,
   Message,
+  TopologyMessagePayload,
 } from "./message";
 
 export class MessageFactory {
@@ -78,5 +79,9 @@ export class MessageFactory {
     return this.create(MessageType.NODE_DISCONNECT, {
       node_id: nodeId,
     }).build();
+  }
+
+  static topology(topology: TopologyMessagePayload) {
+    return this.create(MessageType.TOPOLOGY, topology);
   }
 }

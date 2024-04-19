@@ -1,4 +1,4 @@
-import { MessageType, Message, Messages } from "./messages/message";
+import { MessageType, Message, Messages, LinkState } from "./messages/message";
 import { MessageFactory } from "./messages/factory";
 import { MessageRecorder } from "./messages/recorder";
 import { NodeClient } from "./node/client";
@@ -7,6 +7,7 @@ import { getAltNamesFromCert, getSubjectFromCert } from "./utils";
 import fs from "node:fs";
 import path from "node:path";
 import { Topology } from "./topology";
+import { Logger } from "./logger";
 
 interface PeerConfiguration {
   host: string;
@@ -20,6 +21,8 @@ interface PeerConfiguration {
  * to listening brokers.
  */
 export class Broker {
+  private readonly logger = new Logger(Broker.name);
+
   private readonly key: Buffer;
   private readonly cert: Buffer;
   private readonly ca: Buffer;
@@ -41,7 +44,10 @@ export class Broker {
 
     this.id = parseInt(getSubjectFromCert(this.cert).CN!);
 
-    this.topology = Topology.fromFile(path.join(this.dir, "/topology.json"), this.id);
+    this.topology = Topology.fromFile(
+      path.join(this.dir, "/topology.json"),
+      this.id,
+    );
 
     this.server = new NodeServer("0.0.0.0", 8000, this.cert, this.key, this.ca);
 
@@ -99,11 +105,11 @@ export class Broker {
       const address = altNames[0].address;
 
       // Hardcoded port and address for now
-      this.broadcast(MessageFactory.nodeConnect(id, address, 8000));
+      this.publish(MessageFactory.nodeConnect(id, address, 8000));
     });
 
     this.server.on("disconnected", (id) => {
-      this.broadcast(MessageFactory.nodeDisconnect(id));
+      this.publish(MessageFactory.nodeDisconnect(id));
     });
 
     this.server.on("message", (_, raw) => {
@@ -118,7 +124,7 @@ export class Broker {
       });
 
       client.on("connected", () => {
-        this.broadcast(
+        this.publish(
           MessageFactory.nodeConnect(
             client.getId()!,
             client.getHost(),
@@ -128,7 +134,7 @@ export class Broker {
       });
 
       client.on("disconnected", () => {
-        this.broadcast(MessageFactory.nodeDisconnect(client.getId()!));
+        this.publish(MessageFactory.nodeDisconnect(client.getId()!));
       });
     }
 
@@ -162,25 +168,42 @@ export class Broker {
       message.type === MessageType.NODE_DISCONNECT
     ) {
       this.topology.addLinkChange({
-        state: message.type === MessageType.NODE_CONNECT ? "up" : "down",
+        state:
+          message.type === MessageType.NODE_CONNECT
+            ? LinkState.UP
+            : LinkState.DOWN,
         source: message.source,
         target: message.payload.node_id,
         // We know that timestamps are generated from numbers, just cast it
         timestamp: message.timestamp.toNumber(),
       });
+    } else if (message.type === MessageType.TOPOLOGY) {
+      this.logger.debug(`Received topology from ${message.source}`);
+      // Update topology with the received topology
+      const topology = message.payload;
+      topology.nodes.forEach((node) => this.topology.addNode(node));
+      topology.edges.forEach((edge) => this.topology.addLinkChange(edge));
     }
 
     if (message.isDestination(this.id)) {
       if (message.type === MessageType.PING) {
         // Respond with pong
         const pong = MessageFactory.pong(message.id, message.source);
-
         this.publish(pong);
+      } else if (message.type === MessageType.CLIENT_HELLO) {
+        // Respond with entire topology
+        const topology = MessageFactory.topology(this.topology.toJSON());
+        topology.setDestinations([message.source]);
+        this.publish(topology.build());
+      }
+
+      if (message.isFinalDestination(this.id)) {
+        return;
       }
     }
 
     // TODO: Queue messages for delivery and save it to disk
-    this.broadcast(message);
+    this.publish(message);
   }
 
   private getClientByID(id: number): NodeClient | undefined {
@@ -206,10 +229,7 @@ export class Broker {
     await this.broadcast(message);
   }
 
-  async broadcast(message: Messages): Promise<void> {
-    this.handleMessage(message);
-    this.messageRecorder.add(message);
-
+  private async broadcast(message: Messages): Promise<void> {
     const promises: Promise<void>[] = [];
 
     for (let i = 0; i < this.clients.length; i++) {
