@@ -105,20 +105,6 @@ export class Broker {
       client.on("message", (raw) => {
         this.handleMessage(client.getId()!, raw);
       });
-
-      setInterval(() => {
-        if (!client.hasConnected()) {
-          return;
-        }
-
-        measureLatency(client, this.server)
-          .then((latency) => {
-            console.log("Latency to " + client.getTheirId() + ": " + latency);
-          })
-          .catch((err) => {
-            console.error(err);
-          });
-      }, 1000).unref();
     }
 
     // Listen for incoming connections and messages
