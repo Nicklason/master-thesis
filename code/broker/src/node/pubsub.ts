@@ -1,7 +1,7 @@
 import { Message } from "../messages/message";
 
-export interface Peer extends MessagePublisher, MessageSubscriber {
-  getTheirId: () => number;
+export interface Peer {
+  getId: () => number | null;
 }
 
 export interface MessagePublisher {

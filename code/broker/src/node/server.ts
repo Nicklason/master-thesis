@@ -3,7 +3,7 @@ import { Message } from "../messages/message";
 import { MessageFactory } from "../messages/factory";
 import { getSubjectFromCert } from "../utils";
 import { EventEmitter } from "node:events";
-import { MessagePublisher, MessageSubscriber } from "./pubsub";
+import { MessagePublisher, MessageSubscriber, Peer } from "./pubsub";
 
 export declare interface NodeServer {
   on(event: "connected", listener: (id: number) => void): void;
@@ -11,7 +11,7 @@ export declare interface NodeServer {
   on(event: "message", listener: (source: number, raw: Buffer) => void): void;
 }
 
-export class NodeServer implements MessagePublisher, MessageSubscriber {
+export class NodeServer implements Peer, MessagePublisher, MessageSubscriber {
   private readonly eventEmitter: EventEmitter = new EventEmitter();
 
   private readonly host: string;
@@ -19,7 +19,8 @@ export class NodeServer implements MessagePublisher, MessageSubscriber {
   private readonly cert: Buffer;
   private readonly key: Buffer;
   private readonly ca: Buffer;
-  private readonly ourId: number;
+
+  private id: number | null = null;
 
   private readonly clients: Map<tls.TLSSocket, number> = new Map();
   private readonly server: tls.Server;
@@ -38,8 +39,7 @@ export class NodeServer implements MessagePublisher, MessageSubscriber {
     this.ca = ca;
 
     const subject = getSubjectFromCert(this.cert);
-
-    this.ourId = parseInt(subject.CN!, 10);
+    this.id = parseInt(subject.CN!);
 
     this.server = tls.createServer({
       cert: this.cert,
@@ -50,8 +50,8 @@ export class NodeServer implements MessagePublisher, MessageSubscriber {
     });
   }
 
-  private getOurId(): number {
-    return this.ourId;
+  getId(): number | null {
+    return this.id;
   }
 
   private handleNewClient(socket: tls.TLSSocket): void {

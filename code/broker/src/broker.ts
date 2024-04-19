@@ -30,7 +30,7 @@ export class Broker {
 
   private readonly dir = process.env.DATA_DIR ?? "/app/data";
 
-  private readonly ourId: number;
+  private readonly id: number;
 
   constructor() {
     const { key, cert, ca } = this.getCertificates();
@@ -39,11 +39,11 @@ export class Broker {
     this.cert = cert;
     this.ca = ca;
 
-    this.ourId = parseInt(getSubjectFromCert(this.cert).CN!);
+    this.id = parseInt(getSubjectFromCert(this.cert).CN!);
 
     this.server = new NodeServer("0.0.0.0", 8000, this.cert, this.key, this.ca);
 
-    MessageFactory.setSource(this.ourId);
+    MessageFactory.setSource(this.id);
 
     const peerConfigs = this.getPeerConfigurations();
 
@@ -72,8 +72,8 @@ export class Broker {
     return configurations;
   }
 
-  getOurId(): number {
-    return this.ourId;
+  getId(): number {
+    return this.id;
   }
 
   private createClient(host: string, port: number): NodeClient {
@@ -103,7 +103,7 @@ export class Broker {
       const client = this.clients[i];
 
       client.on("message", (raw) => {
-        this.handleMessage(client.getTheirId()!, raw);
+        this.handleMessage(client.getId()!, raw);
       });
 
       setInterval(() => {
@@ -175,7 +175,7 @@ export class Broker {
     for (let i = 0; i < this.clients.length; i++) {
       const client = this.clients[i];
 
-      if (client.hasConnected() && client.getTheirId() === id) {
+      if (client.hasConnected() && client.getId() === id) {
         return client;
       }
     }

@@ -2,7 +2,7 @@ import tls from "node:tls";
 import { Message } from "../messages/message";
 import { MessageFactory } from "../messages/factory";
 import { EventEmitter } from "node:events";
-import { getSubjectFromCert } from "../utils";
+import { MessagePublisher, MessageSubscriber, Peer } from "./pubsub";
 import { Peer } from "./pubsub";
 
 export declare interface NodeClient {
@@ -11,7 +11,7 @@ export declare interface NodeClient {
   on(event: "message", listener: (raw: Buffer) => void): void;
 }
 
-export class NodeClient implements Peer {
+export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
   private readonly eventEmitter: EventEmitter = new EventEmitter();
 
   private readonly host: string;
@@ -27,9 +27,7 @@ export class NodeClient implements Peer {
   // Indicates whether we have ever been connected to the peer
   private hasBeenConnected = false;
   // The id of the node we connect to. Set when the connection is established
-  private theirId: number | null = null;
-  // Our id. Set when the client is made
-  private ourId: number;
+  private id: number | null = null;
   // A queue of messages to send to the node
   private readonly buffer: Buffer[] = [];
   // Make sure we only have one connection attempt at a time
@@ -51,25 +49,18 @@ export class NodeClient implements Peer {
     this.cert = cert;
     this.key = key;
     this.ca = ca;
-
-    const subject = getSubjectFromCert(cert);
-    this.ourId = parseInt(subject.CN!, 10);
   }
 
-  getTheirId(): number {
-    if (this.theirId === null) {
+  getId(): number {
+    if (this.id === null) {
       throw new Error("Client has not yet been connected");
     }
 
-    return this.theirId;
+    return this.id;
   }
 
   hasConnected(): boolean {
     return this.hasBeenConnected !== null;
-  }
-
-  getOurId(): number {
-    return this.ourId;
   }
 
   connect(reconnect = false): Promise<void> {

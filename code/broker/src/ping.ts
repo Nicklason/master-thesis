@@ -16,6 +16,11 @@ export async function measureLatency(
   ttl = 1000,
 ): Promise<number> {
   return new Promise((resolve, reject) => {
+    const theirId = publisher.getId();
+    if (theirId === null) {
+      return reject(new Error("Publisher has no id"));
+    }
+
     let start: bigint;
 
     const cleanup = () => {
@@ -28,7 +33,7 @@ export async function measureLatency(
       reject(new Error("Timeout reached while waiting for pong message"));
     }, ttl);
 
-    const ping = MessageFactory.ping([publisher.getTheirId()]);
+    const ping = MessageFactory.ping([theirId]);
 
     const listener = (_: number, raw: Buffer) => {
       if (start === undefined) {
