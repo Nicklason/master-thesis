@@ -7,7 +7,10 @@ import { MessagePublisher, MessageSubscriber, Peer } from "./pubsub";
 import { Logger } from "../logger";
 
 export declare interface NodeServer {
-  on(event: "connected", listener: (id: number) => void): void;
+  on(
+    event: "connected",
+    listener: (id: number, socket: tls.TLSSocket) => void,
+  ): void;
   on(event: "disconnected", listener: (id: number) => void): void;
   on(event: "message", listener: (source: number, raw: Buffer) => void): void;
 }
@@ -68,7 +71,7 @@ export class NodeServer implements Peer, MessagePublisher, MessageSubscriber {
       `New client from ${socket.remoteAddress} connected with id ${id}`,
     );
 
-    this.eventEmitter.emit("connected", id);
+    this.eventEmitter.emit("connected", id, socket);
     this.addClient(socket);
 
     this.publish(MessageFactory.serverHello(id));
