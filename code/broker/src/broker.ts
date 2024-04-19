@@ -151,7 +151,7 @@ export class Broker {
         return;
       }
 
-      client.publish(message);
+      this.publish(client, message);
     } else {
       this.broadcast(message);
     }
@@ -169,7 +169,14 @@ export class Broker {
     return undefined;
   }
 
+  async publish(client: NodeClient, message: Message): Promise<void> {
+    this.messageRecorder.add(message);
+    await client.publish(message);
+  }
+
   async broadcast(message: Message): Promise<void> {
+    this.messageRecorder.add(message);
+
     const promises: Promise<void>[] = [];
 
     for (let i = 0; i < this.clients.length; i++) {
