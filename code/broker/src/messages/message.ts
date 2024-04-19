@@ -1,4 +1,5 @@
 import protobuf from "protobufjs/light";
+import Long from "long";
 
 const root = protobuf.Root.fromJSON({
   nested: {
@@ -38,6 +39,10 @@ const root = protobuf.Root.fromJSON({
           type: "uint32",
           id: 5,
           rule: "repeated",
+        },
+        timestamp: {
+          type: "uint64",
+          id: 6,
         },
       },
     },
@@ -148,6 +153,7 @@ export interface DecodedMessage<
   // No destinations is broadcast, one is unicast, more than one is multicast
   // TODO: Anycast support
   destinations: number[];
+  timestamp: Long;
 }
 
 export class Message<T extends MessageType = MessageType> {
@@ -156,6 +162,7 @@ export class Message<T extends MessageType = MessageType> {
   private readonly _payload: Buffer | MessagePayload[T];
   readonly source: number;
   readonly destinations: number[];
+  readonly timestamp: Long;
 
   constructor(
     id: String,
@@ -163,12 +170,14 @@ export class Message<T extends MessageType = MessageType> {
     payload: Buffer | MessagePayload[T],
     source: number,
     destinations: number[] = [],
+    timestamp?: Long,
   ) {
     this.id = id;
     this.type = type;
     this._payload = payload;
     this.source = source;
     this.destinations = destinations;
+    this.timestamp = timestamp ?? Long.fromNumber(Date.now());
   }
 
   private getPayload(): Buffer | MessagePayload[T] {

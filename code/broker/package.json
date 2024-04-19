@@ -2,11 +2,13 @@
   "name": "broker",
   "main": "./dist/app.js",
   "scripts": {
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "prepare": "node -e \"require('node:fs').copyFileSync('./node_modules/long/index.d.ts', './node_modules/long/umd/index.d.ts')\""
   },
   "dependencies": {
     "graph-typed": "^1.52.0",
     "ioredis": "^5.4.1",
+    "long": "^5.2.3",
     "protobufjs": "~7.2.6",
     "uuid": "^9.0.1",
     "winston": "^3.13.0"

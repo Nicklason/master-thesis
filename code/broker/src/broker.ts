@@ -41,10 +41,7 @@ export class Broker {
 
     this.id = parseInt(getSubjectFromCert(this.cert).CN!);
 
-    this.topology = Topology.fromFile(
-      path.join(this.dir, "/topology.json"),
-      this.id,
-    );
+    this.topology = Topology.fromFile(path.join(this.dir, "/topology.json"), this.id);
 
     this.server = new NodeServer("0.0.0.0", 8000, this.cert, this.key, this.ca);
 
@@ -160,12 +157,17 @@ export class Broker {
 
     // Update topology
     this.topology.addNode(message.source);
-    if (message.type === MessageType.NODE_CONNECT) {
-      this.topology.addEdge(message.source, message.payload.node_id);
-    } else if (message.type === MessageType.NODE_DISCONNECT) {
-      // We know that we are not connected to this node anymore
-      this.topology.removeEdge(message.source, message.payload.node_id);
-      this.topology.removeEdge(message.payload.node_id, message.source);
+    if (
+      message.type === MessageType.NODE_CONNECT ||
+      message.type === MessageType.NODE_DISCONNECT
+    ) {
+      this.topology.addLinkChange({
+        state: message.type === MessageType.NODE_CONNECT ? "up" : "down",
+        source: message.source,
+        target: message.payload.node_id,
+        // We know that timestamps are generated from numbers, just cast it
+        timestamp: message.timestamp.toNumber(),
+      });
     }
 
     if (message.isDestination(this.id)) {
