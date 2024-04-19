@@ -45,14 +45,38 @@ export class MessageFactory {
     return this.create(MessageType.PONG, {
       message_id: messageId,
       message_source: messageSource,
-    }).setDestinations([messageSource]).build();
+    })
+      .setDestinations([messageSource])
+      .build();
   }
 
-  static serverHello(): Message<MessageType.SERVER_HELLO> {
-    return this.create(MessageType.SERVER_HELLO).build();
+  static serverHello(destination: number): Message<MessageType.SERVER_HELLO> {
+    return this.create(MessageType.SERVER_HELLO)
+      .setDestinations([destination])
+      .build();
   }
 
-  static clientHello(): Message<MessageType.CLIENT_HELLO> {
-    return this.create(MessageType.CLIENT_HELLO).build();
+  static clientHello(destination: number): Message<MessageType.CLIENT_HELLO> {
+    return this.create(MessageType.CLIENT_HELLO)
+      .setDestinations([destination])
+      .build();
+  }
+
+  static nodeConnect(
+    nodeId: number,
+    nodeAddress: string,
+    nodePort: number,
+  ): Message<MessageType.NODE_CONNECT> {
+    return this.create(MessageType.NODE_CONNECT, {
+      node_id: nodeId,
+      node_host: nodeAddress,
+      node_port: nodePort,
+    }).build();
+  }
+
+  static nodeDisconnect(nodeId: number): Message<MessageType.NODE_DISCONNECT> {
+    return this.create(MessageType.NODE_DISCONNECT, {
+      node_id: nodeId,
+    }).build();
   }
 }

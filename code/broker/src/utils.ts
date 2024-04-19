@@ -33,3 +33,17 @@ export function getSubjectFromCert(cert: Buffer) {
 
   return subject;
 }
+
+export function getAltNamesFromCert(cert: Buffer | X509Certificate) {
+  const x509 = Buffer.isBuffer(cert) ? new X509Certificate(cert) : cert;
+
+  const subjectAltName = x509.subjectAltName ?? "";
+
+  const names = subjectAltName.split(", ").map((name) => {
+    const [key, value] = name.split(":");
+
+    return { type: key, address: value };
+  });
+
+  return names;
+}

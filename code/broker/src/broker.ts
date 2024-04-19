@@ -1,12 +1,12 @@
-import { MessageType, Message } from "./messages/message";
+import { MessageType, Message, Messages } from "./messages/message";
 import { MessageFactory } from "./messages/factory";
 import { MessageRecorder } from "./messages/recorder";
 import { NodeClient } from "./node/client";
 import { NodeServer } from "./node/server";
-import { getSubjectFromCert } from "./utils";
+import { getAltNamesFromCert, getSubjectFromCert } from "./utils";
 import fs from "node:fs";
 import path from "node:path";
-import { measureLatency } from "./ping";
+import { Topology } from "./topology";
 
 interface PeerConfiguration {
   host: string;
@@ -27,7 +27,7 @@ export class Broker {
   private readonly server: NodeServer;
   private readonly clients: NodeClient[] = [];
   private readonly messageRecorder = new MessageRecorder();
-
+  private readonly topology: Topology;
   private readonly dir = process.env.DATA_DIR ?? "/app/data";
 
   private readonly id: number;
@@ -41,6 +41,11 @@ export class Broker {
 
     this.id = parseInt(getSubjectFromCert(this.cert).CN!);
 
+    this.topology = Topology.fromFile(
+      path.join(this.dir, "/topology.json"),
+      this.id,
+    );
+
     this.server = new NodeServer("0.0.0.0", 8000, this.cert, this.key, this.ca);
 
     MessageFactory.setSource(this.id);
@@ -51,6 +56,10 @@ export class Broker {
     for (const config of peerConfigs) {
       this.createClient(config.host, config.port);
     }
+
+    setInterval(() => {
+      this.topology.saveToFile(path.join(this.dir, "/topology.json"));
+    }, 10000).unref();
   }
 
   private getCertificates(): { key: Buffer; cert: Buffer; ca: Buffer } {
@@ -87,23 +96,42 @@ export class Broker {
   async start(): Promise<void> {
     // Setup listeners
 
-    this.server.on("connected", (id) => {
-      console.log("Client connected with ID", id);
+    this.server.on("connected", (id, socket) => {
+      const altNames = getAltNamesFromCert(socket.getPeerX509Certificate()!);
+
+      const address = altNames[0].address;
+
+      // Hardcoded port and address for now
+      this.broadcast(MessageFactory.nodeConnect(id, address, 8000));
     });
 
     this.server.on("disconnected", (id) => {
-      console.log("Client disconnected with ID", id);
+      this.broadcast(MessageFactory.nodeDisconnect(id));
     });
 
-    this.server.on("message", (source, raw) => {
-      this.handleMessage(source, raw);
+    this.server.on("message", (_, raw) => {
+      this.handleRaw(raw);
     });
 
     for (let i = 0; i < this.clients.length; i++) {
       const client = this.clients[i];
 
       client.on("message", (raw) => {
-        this.handleMessage(client.getId()!, raw);
+        this.handleRaw(raw);
+      });
+
+      client.on("connected", () => {
+        this.broadcast(
+          MessageFactory.nodeConnect(
+            client.getId()!,
+            client.getHost(),
+            client.getPort(),
+          ),
+        );
+      });
+
+      client.on("disconnected", () => {
+        this.broadcast(MessageFactory.nodeDisconnect(client.getId()!));
       });
     }
 
@@ -117,28 +145,35 @@ export class Broker {
     }
   }
 
-  private handleMessage(source: number, raw: Buffer) {
+  private handleRaw(raw: Buffer) {
     const message = Message.decode(raw);
+    this.handleMessage(message);
+  }
 
+  private handleMessage(message: Messages) {
     if (this.messageRecorder.has(message.id)) {
       return;
     }
 
     // TODO: Maybe implement a message log?
-    console.log("Message from " + source, message);
     this.messageRecorder.add(message);
+
+    // Update topology
+    this.topology.addNode(message.source);
+    if (message.type === MessageType.NODE_CONNECT) {
+      this.topology.addEdge(message.source, message.payload.node_id);
+    } else if (message.type === MessageType.NODE_DISCONNECT) {
+      // We know that we are not connected to this node anymore
+      this.topology.removeEdge(message.source, message.payload.node_id);
+      this.topology.removeEdge(message.payload.node_id, message.source);
+    }
 
     if (message.isDestination(this.id)) {
       if (message.type === MessageType.PING) {
         // Respond with pong
         const pong = MessageFactory.pong(message.id, message.source);
 
-        const client = this.getClientByID(source);
-        if (!client) {
-          return;
-        }
-
-        this.publish(client, pong);
+        this.publish(pong);
       }
     }
 
@@ -151,7 +186,7 @@ export class Broker {
         return;
       }
 
-      this.publish(client, message);
+      this.publish(message);
     } else {
       this.broadcast(message);
     }
@@ -169,12 +204,19 @@ export class Broker {
     return undefined;
   }
 
-  async publish(client: NodeClient, message: Message): Promise<void> {
+  async publish(message: Messages): Promise<void> {
+    // Handle the message locally first, then publish it
+    this.handleMessage(message);
     this.messageRecorder.add(message);
-    await client.publish(message);
+
+    // TODO: Route the message to the correct client
+
+    // For now, just broadcast the message
+    await this.broadcast(message);
   }
 
-  async broadcast(message: Message): Promise<void> {
+  async broadcast(message: Messages): Promise<void> {
+    this.handleMessage(message);
     this.messageRecorder.add(message);
 
     const promises: Promise<void>[] = [];
@@ -189,6 +231,9 @@ export class Broker {
   }
 
   async stop(): Promise<void> {
+    // Save topology
+    this.topology.saveToFile(path.join(this.dir, "/topology.json"));
+
     // Remove listeners
     await this.server.close();
     this.server.removeAllListeners();

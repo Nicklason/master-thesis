@@ -50,16 +50,20 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
     this.ca = ca;
   }
 
-  getId(): number {
-    if (this.id === null) {
-      throw new Error("Client has not yet been connected");
-    }
-
+  getId(): number | null {
     return this.id;
   }
 
   hasConnected(): boolean {
     return this.hasBeenConnected !== null;
+  }
+
+  getHost(): string {
+    return this.host;
+  }
+
+  getPort(): number {
+    return this.port;
   }
 
   connect(reconnect = false): Promise<void> {
@@ -201,7 +205,7 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
 
     this.eventEmitter.emit("connected");
 
-    this.publish(MessageFactory.clientHello(this.getId()));
+    this.publish(MessageFactory.clientHello(this.getId()!));
   }
 
   private handleDisconnected(err?: Error & { code?: string }): void {

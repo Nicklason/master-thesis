@@ -63,10 +63,28 @@ const root = protobuf.Root.fromJSON({
       },
     },
     NodeConnectMessagePayload: {
-      fields: {},
+      fields: {
+        node_id: {
+          type: "uint32",
+          id: 1,
+        },
+        node_address: {
+          type: "string",
+          id: 2,
+        },
+        node_port: {
+          type: "uint32",
+          id: 3,
+        },
+      },
     },
     NodeDisconnectMessagePayload: {
-      fields: {},
+      fields: {
+        node_id: {
+          type: "uint32",
+          id: 1,
+        },
+      },
     },
     PublishTopicMessagePayload: {
       fields: {},
@@ -217,7 +235,7 @@ export class Message<T extends MessageType = MessageType> {
  * A union of all message types
  */
 export type Messages = {
-  [K in keyof MessagePayload]: Message<K>
+  [K in keyof MessagePayload]: Message<K>;
 }[keyof MessagePayload];
 
 export type DecodedMessages = {
@@ -234,26 +252,36 @@ export interface DecodedMessageAndPayload<T extends MessageType> {
   destinations: number[];
 }
 
-export interface PongMessageData {
+export interface PongMessagePayload {
   message_id: String;
   message_source: number;
 }
 
-export interface DataMessageData {
+export interface DataMessagePayload {
   topic: string;
   value: Buffer;
+}
+
+export interface NodeConnectMessagePayload {
+  node_id: number;
+  node_host: string;
+  node_port: number;
+}
+
+export interface NodeDisconnectMessagePayload {
+  node_id: number;
 }
 
 export type MessagePayload = {
   [MessageType.SERVER_HELLO]: null;
   [MessageType.CLIENT_HELLO]: null;
   [MessageType.PING]: null;
-  [MessageType.PONG]: PongMessageData;
-  [MessageType.NODE_CONNECT]: null;
-  [MessageType.NODE_DISCONNECT]: null;
+  [MessageType.PONG]: PongMessagePayload;
+  [MessageType.NODE_CONNECT]: NodeConnectMessagePayload;
+  [MessageType.NODE_DISCONNECT]: NodeDisconnectMessagePayload;
   [MessageType.PUBLISH_TOPIC]: null;
   [MessageType.SUBSCRIBE_TOPIC]: null;
-  [MessageType.DATA]: DataMessageData;
+  [MessageType.DATA]: DataMessagePayload;
   [MessageType.NETWORK]: null;
 };
 
