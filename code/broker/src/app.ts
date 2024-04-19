@@ -1,6 +1,9 @@
 import { Broker } from "./broker";
 
 const broker = new Broker();
-broker.start().then(() => {
-  console.log("Started broker");
+
+broker.start();
+
+process.on("SIGTERM", async () => {
+  await broker.stop();
 });
