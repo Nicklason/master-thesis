@@ -180,18 +180,7 @@ export class Broker {
     }
 
     // TODO: Queue messages for delivery and save it to disk
-    if (!message.isBroadcast()) {
-      const destination = message.destinations[0];
-
-      const client = this.getClientByID(destination);
-      if (!client) {
-        return;
-      }
-
-      this.publish(message);
-    } else {
-      this.broadcast(message);
-    }
+    this.broadcast(message);
   }
 
   private getClientByID(id: number): NodeClient | undefined {
