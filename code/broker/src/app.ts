@@ -6,4 +6,5 @@ broker.start();
 
 process.on("SIGTERM", async () => {
   await broker.stop();
+  process.exit(0);
 });
