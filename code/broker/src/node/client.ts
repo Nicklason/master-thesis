@@ -6,7 +6,7 @@ import { MessagePublisher, MessageSubscriber, Peer } from "./pubsub";
 import { Logger } from "../logger";
 
 export declare interface NodeClient {
-  on(event: "connected", listener: (id: number) => void): void;
+  on(event: "connected", listener: () => void): void;
   on(event: "disconnected", listener: () => void): void;
   on(event: "message", listener: (raw: Buffer) => void): void;
 }
