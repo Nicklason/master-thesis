@@ -4,6 +4,7 @@ import { MessageFactory } from "../messages/factory";
 import { getSubjectFromCert } from "../utils";
 import { EventEmitter } from "node:events";
 import { MessagePublisher, MessageSubscriber, Peer } from "./pubsub";
+import { Logger } from "../logger";
 
 export declare interface NodeServer {
   on(event: "connected", listener: (id: number) => void): void;
@@ -12,6 +13,7 @@ export declare interface NodeServer {
 }
 
 export class NodeServer implements Peer, MessagePublisher, MessageSubscriber {
+  private readonly logger = new Logger(NodeServer.name);
   private readonly eventEmitter: EventEmitter = new EventEmitter();
 
   private readonly host: string;
@@ -57,10 +59,14 @@ export class NodeServer implements Peer, MessagePublisher, MessageSubscriber {
   private handleNewClient(socket: tls.TLSSocket): void {
     const id = NodeServer.getClientId(socket);
     if (id === undefined) {
-      console.error("Invalid ID");
+      this.logger.warn("Client connected with an invalid ID");
       this.disconnect(socket);
       return;
     }
+
+    this.logger.info(
+      `New client from ${socket.remoteAddress} connected with id ${id}`,
+    );
 
     this.eventEmitter.emit("connected", id);
     this.addClient(socket);
@@ -76,6 +82,7 @@ export class NodeServer implements Peer, MessagePublisher, MessageSubscriber {
     });
 
     socket.on("close", () => {
+      this.logger.info(`Client with id ${id} disconnected`);
       this.eventEmitter.emit("disconnected", id);
       this.removeClient(socket);
     });
@@ -127,6 +134,8 @@ export class NodeServer implements Peer, MessagePublisher, MessageSubscriber {
 
   listen(): void {
     this.server.listen(this.port, this.host);
+
+    this.logger.info(`Server is listening on ${this.host}:${this.port}`);
 
     this.server.on("secureConnection", (socket) => {
       this.handleNewClient(socket);

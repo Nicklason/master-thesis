@@ -3,7 +3,7 @@ import { Message } from "../messages/message";
 import { MessageFactory } from "../messages/factory";
 import { EventEmitter } from "node:events";
 import { MessagePublisher, MessageSubscriber, Peer } from "./pubsub";
-import { Peer } from "./pubsub";
+import { Logger } from "../logger";
 
 export declare interface NodeClient {
   on(event: "connected", listener: (id: number) => void): void;
@@ -12,6 +12,7 @@ export declare interface NodeClient {
 }
 
 export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
+  private readonly logger = new Logger(NodeClient.name);
   private readonly eventEmitter: EventEmitter = new EventEmitter();
 
   private readonly host: string;
@@ -87,26 +88,28 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
 
     const promise = new Promise<void>((resolve, reject) => {
       const connect = () => {
+        attempts++;
+
         if (this.client) {
+          this.logger.debug("Cleaning up existing client");
           this.client.removeAllListeners();
           this.client.destroy();
         }
 
         this.client = tls.connect(options);
 
-        this.client.setNoDelay(true);
+        this.logger.info(
+          `Connecting to ${this.host}:${this.port} (attempt #${attempts})`,
+        );
 
-        attempts++;
+        this.client.setNoDelay(true);
 
         this.client.on("end", () => {
           this.handleDisconnected();
         });
 
         this.client.on("error", (err) => {
-          console.error("Error with node connection");
-          console.error(err);
-
-          this.handleDisconnected();
+          this.handleDisconnected(err);
 
           // Max wait of 1 minute between attempts
           const wait = Math.min(
@@ -115,9 +118,7 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
             1000 * Math.pow(2, attempts - 1) + Math.floor(Math.random() * 1000),
           );
 
-          console.log(
-            "Peer connection failed, reconnecting in " + wait + "ms...",
-          );
+          this.logger.warn(`Connection failed, reconnecting in ${wait}ms...`);
 
           // Attempt to reconnect
           setTimeout(() => {
@@ -148,7 +149,9 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
             return reject(new Error("Invalid node id"));
           }
 
-          this.theirId = id;
+          this.logger.setMeta("node", id);
+
+          this.id = id;
         });
       };
 
@@ -193,18 +196,27 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
       return;
     }
 
+    this.logger.info("Connection is ready");
+
     this.connected = true;
     this.hasBeenConnected = true;
 
     this.eventEmitter.emit("connected");
 
-    this.publish(MessageFactory.clientHello(this.getTheirId()));
+    this.publish(MessageFactory.clientHello(this.getId()));
   }
 
-  private handleDisconnected(): void {
+  private handleDisconnected(err?: Error & { code?: string }): void {
     if (this.connected === false) {
       return;
     }
+
+    let extra = "";
+    if (err) {
+      extra = `, reason: ${err.code ?? err.message}`;
+    }
+
+    this.logger.warn(`Disconnected from node${extra}`);
 
     this.connected = false;
 
@@ -269,8 +281,7 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
           // Remove the message from the queue
           this.buffer.shift();
         } catch (err) {
-          console.log("Error in flush");
-          console.error(err);
+          this.logger.error("Error while flushing message buffer", err);
         }
       }
 
