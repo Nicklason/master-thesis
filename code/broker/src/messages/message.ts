@@ -169,7 +169,7 @@ export class Message<T extends MessageType = MessageType> {
   }
 
   isDestination(node: number): boolean {
-    return this.destinations.includes(node);
+    return this.isBroadcast() || this.destinations.includes(node);
   }
 
   isBroadcast(): boolean {
