@@ -128,18 +128,18 @@ export class Broker {
     console.log("Message from " + source, message);
     this.messageRecorder.add(message);
 
-    const type = message.type;
+    if (message.isDestination(this.id)) {
+      if (message.type === MessageType.PING) {
+        // Respond with pong
+        const pong = MessageFactory.pong(message.id, message.source);
 
-    if (type === MessageType.PING) {
-      // Respond with pong
-      const pong = MessageFactory.pong(message.id, message.source);
+        const client = this.getClientByID(source);
+        if (!client) {
+          return;
+        }
 
-      const client = this.getClientByID(source);
-      if (!client) {
-        return;
+        this.publish(client, pong);
       }
-
-      client.publish(pong);
     }
 
     // TODO: Queue messages for delivery and save it to disk
