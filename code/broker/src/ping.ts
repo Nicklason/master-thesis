@@ -24,8 +24,8 @@ export async function measureLatency(
     let start: bigint;
 
     const cleanup = () => {
-        subscriber.off("message", listener);
-        clearTimeout(timeout);
+      subscriber.off("message", listener);
+      clearTimeout(timeout);
     };
 
     const timeout = setTimeout(() => {
@@ -44,7 +44,10 @@ export async function measureLatency(
       if (message.type !== MessageType.PONG) {
         // Not a pong message
         return;
-      } else if (message.payload.message_id !== ping.id && message.payload.message_source !== ping.source) {
+      } else if (
+        message.payload.message_id !== ping.id &&
+        message.payload.message_source !== ping.source
+      ) {
         // Not a pong message to the ping
         return;
       }
@@ -59,7 +62,6 @@ export async function measureLatency(
 
       resolve(latency);
     };
-
 
     subscriber.on("message", listener);
 
