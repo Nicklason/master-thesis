@@ -36,8 +36,6 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
   // Make sure we only have one flush at a time
   private flushPromise: Promise<void> | null = null;
 
-  private pingInterval: NodeJS.Timeout | null = null;
-
   constructor(
     host: string,
     port: number,
@@ -228,11 +226,6 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
     this.client = null;
 
     this.eventEmitter.emit("disconnected");
-
-    if (this.pingInterval !== null) {
-      clearInterval(this.pingInterval);
-      this.pingInterval = null;
-    }
   }
 
   private handleData(data: Buffer): void {
