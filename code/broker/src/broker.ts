@@ -170,8 +170,7 @@ export class Broker {
             : LinkState.DOWN,
         source: message.source,
         target: message.payload.node_id,
-        // We know that timestamps are generated from numbers, just cast it
-        timestamp: message.timestamp.toNumber(),
+        timestamp: message.timestamp,
       });
     } else if (
       message.type === MessageType.TOPOLOGY &&
@@ -191,7 +190,7 @@ export class Broker {
         this.publish(pong);
       } else if (message.type === MessageType.CLIENT_HELLO) {
         // Respond with entire topology
-        const topology = MessageFactory.topology(this.topology.toJSON());
+        const topology = MessageFactory.topology(this.topology.export());
         topology.setDestinations([message.source]);
         this.publish(topology.build());
       }

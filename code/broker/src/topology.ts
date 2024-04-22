@@ -1,10 +1,18 @@
 import { DirectedGraph, DirectedVertex } from "graph-typed";
 import fs from "fs";
 import { LinkChange, LinkState, Node } from "./messages/message";
+import Long from "long";
+
+export interface DecodedLinkChange {
+  state: LinkState;
+  source: Node;
+  target: Node;
+  timestamp: string;
+}
 
 interface DecodedTopology {
   nodes: Node[];
-  edges: LinkChange[];
+  edges: DecodedLinkChange[];
 }
 
 export class Topology {
@@ -26,7 +34,12 @@ export class Topology {
       const parsed = JSON.parse(raw) as DecodedTopology;
 
       parsed.nodes.forEach((node) => topology.addNode(node));
-      parsed.edges.forEach((change) => topology.addLinkChange(change));
+      parsed.edges
+        .map((change) => ({
+          ...change,
+          timestamp: Long.fromString(change.timestamp),
+        }))
+        .forEach((change) => topology.addLinkChange(change));
     }
 
     return topology;
@@ -37,7 +50,7 @@ export class Topology {
     const key = `${change.source}-${change.target}`;
 
     const existing = this.changes.get(key);
-    if (existing && existing.timestamp > change.timestamp) {
+    if (existing && existing.timestamp.greaterThan(change.timestamp)) {
       // Existing change is older than the provided change. Ignore it.
       return;
     }
@@ -104,9 +117,31 @@ export class Topology {
       nodes.push(vertex.key as Node);
     });
 
+    const edges = Array.from(this.changes.values()).map((change) => ({
+      source: change.source,
+      target: change.target,
+      state: change.state,
+      timestamp: change.timestamp.toString(),
+    }));
+
     return {
       nodes,
-      edges: Array.from(this.changes.values()),
+      edges,
+    };
+  }
+
+  export(): { nodes: Node[]; edges: LinkChange[] } {
+    const nodes: Node[] = [];
+
+    this.graph.vertexMap.forEach((vertex) => {
+      nodes.push(vertex.key as Node);
+    });
+
+    const edges = Array.from(this.changes.values());
+
+    return {
+      nodes,
+      edges,
     };
   }
 
