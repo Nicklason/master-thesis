@@ -246,10 +246,14 @@ export class Broker {
     await this.server.close();
     this.server.removeAllListeners();
 
-    for (const client of this.clients) {
+    for (let i = this.clients.length - 1; i >= 0; i--) {
+      const client = this.clients[i];
+
       // Disconnect from remote servers
       await client.close();
       client.removeAllListeners();
+      // Remove the client
+      this.clients.splice(i, 1);
     }
 
     // Save topology
