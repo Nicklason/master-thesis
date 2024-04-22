@@ -242,9 +242,6 @@ export class Broker {
   }
 
   async stop(): Promise<void> {
-    // Save topology
-    this.topology.saveToFile(path.join(this.dir, "/topology.json"));
-
     // Remove listeners
     await this.server.close();
     this.server.removeAllListeners();
@@ -254,5 +251,8 @@ export class Broker {
       await client.close();
       client.removeAllListeners();
     }
+
+    // Save topology
+    this.topology.saveToFile(path.join(this.dir, "/topology.json"));
   }
 }
