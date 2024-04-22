@@ -338,7 +338,7 @@ export interface LinkChange {
   state: LinkState;
   source: Node;
   target: Node;
-  timestamp: number;
+  timestamp: Long;
 }
 
 export interface TopologyMessagePayload {

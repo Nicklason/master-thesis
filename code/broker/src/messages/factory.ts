@@ -84,4 +84,8 @@ export class MessageFactory {
   static topology(topology: TopologyMessagePayload) {
     return this.create(MessageType.TOPOLOGY, topology);
   }
+
+  static data(topic: string, data: Buffer) {
+    return this.create(MessageType.DATA, { topic, value: data });
+  }
 }
