@@ -202,6 +202,10 @@ export class Broker {
       }
     }
 
+    if (message.source === this.id) {
+      return;
+    }
+
     // TODO: Queue messages for delivery and save it to disk
     this.publish(message);
   }
