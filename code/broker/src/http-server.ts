@@ -71,7 +71,7 @@ export class HTTPServer {
       "/peers",
       validateRequest(peerSchema, "body"),
       asyncHandler(async (req, res) => {
-        await broker.removePeerByHost(req.body.host, req.body.port);
+        await broker.removePeerByHostAndPort(req.body.host, req.body.port);
         res.json({ success: true });
       }),
     );

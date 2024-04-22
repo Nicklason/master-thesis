@@ -138,10 +138,7 @@ export class Broker {
     this.server.listen();
 
     // Connect to remote servers
-    for (let i = 0; i < this.clients.length; i++) {
-      const client = this.clients[i];
-      await client.connect();
-    }
+    await Promise.all(this.clients.map((client) => client.connect()));
   }
 
   getPeers() {
@@ -161,6 +158,15 @@ export class Broker {
     return client.connect();
   }
 
+  private getPeerByHostAndPort(
+    host: string,
+    port: number,
+  ): NodeClient | undefined {
+    return this.clients.find(
+      (client) => client.getHost() === host && client.getPort() === port,
+    );
+  }
+
   removePeerById(id: number): Promise<void> {
     const client = this.clients.find((client) => client.getId() === id);
     if (!client) {
@@ -170,10 +176,8 @@ export class Broker {
     return this.removePeer(client);
   }
 
-  async removePeerByHost(host: string, port: number): Promise<void> {
-    const client = this.clients.find(
-      (client) => client.getHost() === host && client.getPort() === port,
-    );
+  async removePeerByHostAndPort(host: string, port: number): Promise<void> {
+    const client = this.getPeerByHostAndPort(host, port);
     if (!client) {
       return Promise.resolve();
     }
