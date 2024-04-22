@@ -144,6 +144,51 @@ export class Broker {
     }
   }
 
+  getPeers() {
+    return this.clients.map((client) => ({
+      id: client.getId(),
+      host: client.getHost(),
+      port: client.getPort(),
+      connected: client.isConnected(),
+    }));
+  }
+
+  addPeer(host: string, port: number): Promise<void> {
+    const client = this.createClient(host, port);
+
+    this.savePeers();
+
+    return client.connect();
+  }
+
+  removePeerById(id: number): Promise<void> {
+    const client = this.clients.find((client) => client.getId() === id);
+    if (!client) {
+      return Promise.resolve();
+    }
+
+    return this.removePeer(client);
+  }
+
+  async removePeerByHost(host: string, port: number): Promise<void> {
+    const client = this.clients.find(
+      (client) => client.getHost() === host && client.getPort() === port,
+    );
+    if (!client) {
+      return Promise.resolve();
+    }
+
+    return this.removePeer(client);
+  }
+
+  private async removePeer(client: NodeClient) {
+    await client.close();
+    client.removeAllListeners();
+
+    this.clients.splice(this.clients.indexOf(client), 1);
+    this.savePeers();
+  }
+
   private handleRaw(raw: Buffer) {
     const message = Message.decode(raw);
     this.handleMessage(message);
@@ -263,6 +308,9 @@ export class Broker {
   }
 
   async stop(): Promise<void> {
+    // Save peers
+    this.savePeers();
+
     // Remove listeners
     await this.server.close();
     this.server.removeAllListeners();
@@ -279,5 +327,23 @@ export class Broker {
 
     // Save topology
     this.topology.saveToFile(path.join(this.dir, "/topology.json"));
+  }
+
+  private savePeers(): void {
+    const peers: PeerConfiguration[] = [];
+
+    for (let i = 0; i < this.clients.length; i++) {
+      const client = this.clients[i];
+
+      peers.push({
+        host: client.getHost(),
+        port: client.getPort(),
+      });
+    }
+
+    fs.writeFileSync(
+      path.join(this.dir, "/peers.json"),
+      JSON.stringify(peers, null, 2),
+    );
   }
 }

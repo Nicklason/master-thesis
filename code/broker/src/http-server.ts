@@ -2,7 +2,15 @@ import { Broker } from "./broker";
 import express, { NextFunction, Request, Response } from "express";
 import { Server } from "node:http";
 import { MessageFactory } from "./messages/factory";
-import { DataBody, dataSchema, validateRequest } from "./schemas";
+import {
+  DataBody,
+  PeerBody,
+  ValidationError,
+  dataSchema,
+  idSchema,
+  peerSchema,
+  validateRequest,
+} from "./schemas";
 import asyncHandler from "express-async-handler";
 import { Logger } from "./logger";
 
@@ -16,7 +24,7 @@ export class HTTPServer {
 
     this.app.post<unknown, unknown, DataBody>(
       "/data",
-      validateRequest(dataSchema),
+      validateRequest(dataSchema, "body"),
       asyncHandler(async (req, res) => {
         const data = MessageFactory.data(
           req.body.topic,
@@ -33,10 +41,54 @@ export class HTTPServer {
       }),
     );
 
+    this.app.get(
+      "/peers",
+      asyncHandler(async (_, res) => {
+        const peers = broker.getPeers();
+        res.json(peers);
+      }),
+    );
+
+    this.app.post<unknown, unknown, PeerBody>(
+      "/peers",
+      validateRequest(peerSchema, "body"),
+      asyncHandler(async (req, res) => {
+        await broker.addPeer(req.body.host, req.body.port);
+        res.json({ success: true });
+      }),
+    );
+
+    this.app.delete(
+      "/peers/:id",
+      validateRequest(idSchema, "params"),
+      asyncHandler(async (req, res) => {
+        await broker.removePeerById(parseInt(req.params.id, 10));
+        res.json({ success: true });
+      }),
+    );
+
+    this.app.delete(
+      "/peers",
+      validateRequest(peerSchema, "body"),
+      asyncHandler(async (req, res) => {
+        await broker.removePeerByHost(req.body.host, req.body.port);
+        res.json({ success: true });
+      }),
+    );
+
+    this.app.get('/topology', asyncHandler(async (_, res) => {
+      const topology = broker.getTopology();
+      res.json(topology.toJSON());      
+    }));
+
     this.app.use((err: Error, _: Request, res: Response, __: NextFunction) => {
       if (err instanceof SyntaxError) {
         return res.status(400).json({
           error: "Invalid JSON payload",
+        });
+      } else if (err instanceof ValidationError) {
+        return res.status(400).json({
+          error: err.message,
         });
       }
 
