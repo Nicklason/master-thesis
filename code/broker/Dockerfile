@@ -12,5 +12,7 @@ COPY ./src ./src
 
 RUN pnpm run build
 
+ENV NODE_ENV=production
+
 CMD ["node", "./dist/app.js"]
 
