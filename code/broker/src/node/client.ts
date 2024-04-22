@@ -114,11 +114,12 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
           this.handleDisconnected(err);
 
           // Max wait of 1 minute between attempts
-          const wait = Math.min(
-            1 * 60 * 1000,
-            // Exponential backoff with a random factor to prevent the "thundering herd" problem
-            1000 * Math.pow(2, attempts - 1) + Math.floor(Math.random() * 1000),
-          );
+          const wait =
+            Math.min(
+              1 * 60 * 1000,
+              // Exponential backoff with a random factor to prevent the "thundering herd" problem
+              1000 * Math.pow(2, attempts - 1),
+            ) + Math.floor(Math.random() * 1000);
 
           this.logger.warn(`Connection failed, reconnecting in ${wait}ms...`);
 
