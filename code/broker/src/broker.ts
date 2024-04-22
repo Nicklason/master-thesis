@@ -150,7 +150,12 @@ export class Broker {
     }));
   }
 
-  addPeer(host: string, port: number): Promise<void> {
+  async addPeer(host: string, port: number): Promise<void> {
+    // Only create a new client if it doesn't exist
+    if (this.getPeerByHostAndPort(host, port)) {
+      return;
+    }
+
     const client = this.createClient(host, port);
 
     this.savePeers();
