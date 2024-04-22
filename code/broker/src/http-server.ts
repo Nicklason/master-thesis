@@ -76,11 +76,6 @@ export class HTTPServer {
       }),
     );
 
-    this.app.get('/topology', asyncHandler(async (_, res) => {
-      const topology = broker.getTopology();
-      res.json(topology.toJSON());      
-    }));
-
     this.app.use((err: Error, _: Request, res: Response, __: NextFunction) => {
       if (err instanceof SyntaxError) {
         return res.status(400).json({
