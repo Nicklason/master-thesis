@@ -93,6 +93,24 @@ export class Broker {
 
     this.clients.push(client);
 
+    client.on("message", (raw) => {
+      this.handleRaw(raw);
+    });
+
+    client.on("connected", () => {
+      this.publish(
+        MessageFactory.nodeConnect(
+          client.getId()!,
+          client.getHost(),
+          client.getPort(),
+        ),
+      );
+    });
+
+    client.on("disconnected", () => {
+      this.publish(MessageFactory.nodeDisconnect(client.getId()!));
+    });
+
     return client;
   }
 
@@ -115,28 +133,6 @@ export class Broker {
     this.server.on("message", (_, raw) => {
       this.handleRaw(raw);
     });
-
-    for (let i = 0; i < this.clients.length; i++) {
-      const client = this.clients[i];
-
-      client.on("message", (raw) => {
-        this.handleRaw(raw);
-      });
-
-      client.on("connected", () => {
-        this.publish(
-          MessageFactory.nodeConnect(
-            client.getId()!,
-            client.getHost(),
-            client.getPort(),
-          ),
-        );
-      });
-
-      client.on("disconnected", () => {
-        this.publish(MessageFactory.nodeDisconnect(client.getId()!));
-      });
-    }
 
     // Listen for incoming connections and messages
     this.server.listen();
