@@ -177,7 +177,10 @@ export class Broker {
         // We know that timestamps are generated from numbers, just cast it
         timestamp: message.timestamp.toNumber(),
       });
-    } else if (message.type === MessageType.TOPOLOGY) {
+    } else if (
+      message.type === MessageType.TOPOLOGY &&
+      message.source !== this.id
+    ) {
       this.logger.debug(`Received topology from ${message.source}`);
       // Update topology with the received topology
       const topology = message.payload;
@@ -227,10 +230,25 @@ export class Broker {
     this.handleMessage(message);
     this.messageRecorder.add(message);
 
-    // TODO: Route the message to the correct client
+    if (message.isBroadcast()) {
+      await this.broadcast(message);
+    } else {
+      // Get next hop
+      const next = message.destinations
+        .map((destination) =>
+          this.topology.getNextHop(this.getId(), destination),
+        )
+        .filter((id): id is number => id !== undefined);
 
-    // For now, just broadcast the message
-    await this.broadcast(message);
+      // Remove duplicates
+      const unique = new Set(next);
+      for (const id of unique) {
+        const client = this.getClientByID(id);
+        if (client) {
+          await client.publish(message);
+        }
+      }
+    }
   }
 
   private async broadcast(message: Messages): Promise<void> {

@@ -63,11 +63,13 @@ export class Topology {
     this.graph.addVertex(new DirectedVertex(node));
   }
 
-  private addEdge(from: number, to: number): void {
+  private addEdge(from: number, to: number, weight: number = 1): void {
     this.addNode(from);
     this.addNode(to);
 
-    if (this.graph.hasEdge(from, to)) {
+    const existing = this.graph.getEdge(from, to);
+    if (existing) {
+      existing.weight = weight;
       return;
     }
 
@@ -80,6 +82,19 @@ export class Topology {
     }
 
     this.graph.deleteEdge(from, to);
+  }
+
+  getNextHop(from: number, to: number): number | undefined {
+    if (!this.graph.hasVertex(from) || !this.graph.hasVertex(to)) {
+      return;
+    }
+
+    const path = this.graph.getMinPathBetween(from, to, true);
+    if (path === undefined || path.length < 2) {
+      return undefined;
+    }
+
+    return path[1].key as number;
   }
 
   toJSON(): DecodedTopology {
