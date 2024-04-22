@@ -35,6 +35,8 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
   private connectPromise: Promise<void> | null = null;
   // Make sure we only have one flush at a time
   private flushPromise: Promise<void> | null = null;
+  // Indicate if the connection has been closed
+  private closed = false;
 
   constructor(
     host: string,
@@ -54,6 +56,10 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
     return this.id;
   }
 
+  isConnected(): boolean {
+    return this.connected;
+  }
+
   hasConnected(): boolean {
     return this.hasBeenConnected !== null;
   }
@@ -66,6 +72,10 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
     return this.port;
   }
 
+  isClosed(): boolean {
+    return this.closed;
+  }
+
   connect(reconnect = false): Promise<void> {
     if (this.connectPromise !== null) {
       // If we are already connecting, return the existing promise
@@ -75,6 +85,8 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
     if (reconnect === false && this.connected) {
       return Promise.resolve();
     }
+
+    this.closed = false;
 
     const options: tls.ConnectionOptions = {
       host: this.host,
@@ -177,6 +189,7 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
 
   async close(): Promise<void> {
     return this.flush().then(() => {
+      this.closed = true;
       return this.disconnect();
     });
   }
@@ -242,6 +255,12 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
   }
 
   private publishEncoded(raw: Buffer): Promise<void> {
+    if (this.closed && this.buffer.length === 0) {
+      return Promise.reject(
+        new Error("Connection is closed, no more messages can be sent"),
+      );
+    }
+
     // Buffer the write
     this.buffer.push(raw);
     // Attempt to flush the buffer
@@ -264,9 +283,13 @@ export class NodeClient implements Peer, MessagePublisher, MessageSubscriber {
     });
   }
 
-  private flush(): Promise<void> {
+  private async flush(): Promise<void> {
     if (this.flushPromise !== null) {
       return this.flushPromise;
+    }
+
+    if (this.closed) {
+      return;
     }
 
     this.flushPromise = new Promise<void>(async (resolve) => {

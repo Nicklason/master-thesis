@@ -239,7 +239,8 @@ export class Broker {
       const unique = new Set(next);
       for (const id of unique) {
         const client = this.getClientByID(id);
-        if (client) {
+        // Make sure client is not closed. Should not happen, but just in case
+        if (client && !client.isClosed()) {
           await client.publish(message);
         }
       }
@@ -251,6 +252,9 @@ export class Broker {
 
     for (let i = 0; i < this.clients.length; i++) {
       const client = this.clients[i];
+      if (client.isClosed()) {
+        continue;
+      }
 
       promises.push(client.publish(message));
     }
