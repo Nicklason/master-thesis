@@ -184,7 +184,7 @@ export interface DecodedMessage<
   T extends MessageType = MessageType,
   D extends Buffer | null = Buffer | null,
 > {
-  id: String;
+  id: string;
   // The type of message
   type: T;
   // The contents of the message
@@ -199,7 +199,7 @@ export interface DecodedMessage<
 }
 
 export class Message<T extends MessageType = MessageType> {
-  readonly id: String;
+  readonly id: string;
   readonly type: T;
   private readonly _payload: Buffer | MessagePayload[T];
   readonly source: number;
@@ -207,7 +207,7 @@ export class Message<T extends MessageType = MessageType> {
   readonly timestamp: Long;
 
   constructor(
-    id: String,
+    id: string,
     type: T,
     payload: Buffer | MessagePayload[T],
     source: number,
@@ -300,7 +300,7 @@ export type DecodedMessages = {
 }[keyof MessagePayload];
 
 export interface DecodedMessageAndPayload<T extends MessageType> {
-  id: String;
+  id: string;
   type: MessageType;
   payload: MessagePayload[T];
   source: number;
@@ -308,7 +308,7 @@ export interface DecodedMessageAndPayload<T extends MessageType> {
 }
 
 export interface PongMessagePayload {
-  message_id: String;
+  message_id: string;
   message_source: number;
 }
 

@@ -1,9 +1,9 @@
 import { Message } from "./message";
 
 export class MessageRecorder {
-  private readonly cache: Map<String, Message> = new Map();
-  private upcomingGC = new Set<String>();
-  private nextUpcomingGC = new Set<String>();
+  private readonly cache: Map<string, Message> = new Map();
+  private upcomingGC = new Set<string>();
+  private nextUpcomingGC = new Set<string>();
   private gcInterval: NodeJS.Timeout | null = null;
 
   private readonly gcIntervalTime = 1000 * 10; // 10 seconds
@@ -30,7 +30,7 @@ export class MessageRecorder {
     this.nextUpcomingGC.add(id);
   }
 
-  has(id: String): boolean {
+  has(id: string): boolean {
     return this.cache.has(id);
   }
 

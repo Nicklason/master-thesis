@@ -9,7 +9,7 @@ interface DecodedTopology {
 
 export class Topology {
   private readonly graph: DirectedGraph = new DirectedGraph();
-  private readonly changes: Map<String, LinkChange> = new Map();
+  private readonly changes: Map<string, LinkChange> = new Map();
 
   constructor(ourId?: Node) {
     if (ourId !== undefined) {

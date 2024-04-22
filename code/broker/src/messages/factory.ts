@@ -40,7 +40,7 @@ export class MessageFactory {
   }
 
   static pong(
-    messageId: String,
+    messageId: string,
     messageSource: number,
   ): Message<MessageType.PONG> {
     return this.create(MessageType.PONG, {
