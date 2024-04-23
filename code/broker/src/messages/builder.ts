@@ -4,9 +4,10 @@ import {
   PayloadNotRequiredMessageType,
   PayloadRequiredMessageType,
 } from "./types";
-import { Message } from "./message";
+import { Message } from "./implementations/message";
 import { v4 as uuidv4 } from "uuid";
 import Long from "long";
+import { LocalMessage } from "./implementations/local-message";
 
 export class MessageBuilder<T extends MessageType> {
   private id: string;
@@ -67,7 +68,7 @@ export class MessageBuilder<T extends MessageType> {
       throw new Error("Message source is required");
     }
 
-    return new Message(
+    return new LocalMessage(
       this.id ?? uuidv4(),
       this.type,
       this.payload,

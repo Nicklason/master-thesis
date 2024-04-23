@@ -1,4 +1,4 @@
-import { Message, Messages } from "./messages/message";
+import { Messages } from "./messages/implementations/message";
 import { MessageType, LinkState } from "./messages/types";
 import { MessageFactory } from "./messages/factory";
 import { MessageRecorder } from "./messages/recorder";
@@ -9,6 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Topology } from "./topology";
 import { Logger } from "./logger";
+import { SelectiveMessage } from "./messages/implementations/selective-message";
 
 interface PeerConfiguration {
   host: string;
@@ -200,7 +201,7 @@ export class Broker {
   }
 
   private handleRaw(raw: Buffer) {
-    const message = Message.decode(raw);
+    const message = new SelectiveMessage(raw) as Messages;
     this.handleMessage(message);
   }
 
@@ -212,30 +213,39 @@ export class Broker {
     // TODO: Maybe implement a message log?
     this.messageRecorder.add(message);
 
-    // Update topology
-    this.topology.addNode(message.source);
-    if (
-      message.type === MessageType.NODE_CONNECT ||
-      message.type === MessageType.NODE_DISCONNECT
-    ) {
-      this.topology.addLinkChange({
-        state:
-          message.type === MessageType.NODE_CONNECT
-            ? LinkState.UP
-            : LinkState.DOWN,
-        source: message.source,
-        target: message.payload.node_id,
-        timestamp: message.timestamp,
-      });
-    } else if (
-      message.type === MessageType.TOPOLOGY &&
-      message.source !== this.id
-    ) {
-      this.logger.debug(`Received topology from ${message.source}`);
-      // Update topology with the received topology
-      const topology = message.payload;
-      topology.nodes.forEach((node) => this.topology.addNode(node));
-      topology.edges.forEach((edge) => this.topology.addLinkChange(edge));
+    if (message.isDestination(this.id)) {
+      if (message.type === MessageType.PING) {
+        // Respond with pong
+        const pong = MessageFactory.pong(message.id, message.source);
+        this.publish(pong);
+      } else if (message.type === MessageType.CLIENT_HELLO) {
+        // Respond with entire topology
+        const topology = MessageFactory.topology(this.topology.export());
+        topology.setDestinations([message.source]);
+        this.publish(topology.build());
+      } else if (
+        message.type === MessageType.NODE_CONNECT ||
+        message.type === MessageType.NODE_DISCONNECT
+      ) {
+        this.topology.addLinkChange({
+          state:
+            message.type === MessageType.NODE_CONNECT
+              ? LinkState.UP
+              : LinkState.DOWN,
+          source: message.source,
+          target: message.payload.node_id,
+          timestamp: message.timestamp,
+        });
+      } else if (
+        message.type === MessageType.TOPOLOGY &&
+        message.source !== this.id
+      ) {
+        this.logger.debug(`Received topology from ${message.source}`);
+        // Update topology with the received topology
+        const topology = message.payload;
+        topology.nodes.forEach((node) => this.topology.addNode(node));
+        topology.edges.forEach((edge) => this.topology.addLinkChange(edge));
+      }
     }
 
     if (message.type === MessageType.DATA) {
@@ -250,23 +260,6 @@ export class Broker {
           message.payload.value.toString("utf8") +
           ")",
       );
-    }
-
-    if (message.isDestination(this.id)) {
-      if (message.type === MessageType.PING) {
-        // Respond with pong
-        const pong = MessageFactory.pong(message.id, message.source);
-        this.publish(pong);
-      } else if (message.type === MessageType.CLIENT_HELLO) {
-        // Respond with entire topology
-        const topology = MessageFactory.topology(this.topology.export());
-        topology.setDestinations([message.source]);
-        this.publish(topology.build());
-      }
-
-      if (message.isFinalDestination(this.id)) {
-        return;
-      }
     }
 
     if (message.source === this.id) {

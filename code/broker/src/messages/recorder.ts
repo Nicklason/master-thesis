@@ -1,4 +1,4 @@
-import { Message } from "./message";
+import { Message } from "./implementations/message";
 
 export class MessageRecorder {
   private readonly cache: Map<string, Message> = new Map();

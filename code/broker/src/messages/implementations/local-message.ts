@@ -1,13 +1,10 @@
+import { Message } from "protobufjs";
+import { Serializer } from "../serializer";
+import { DecodedMessage, DecodedMessages, MessagePayload, MessageType } from "../types";
 import Long from "long";
-import {
-  DecodedMessage,
-  DecodedMessages,
-  MessagePayload,
-  MessageType,
-} from "./types";
-import { Serializer } from "./serializer";
 
-export class Message<T extends MessageType = MessageType> {
+export class LocalMessage<T extends MessageType> extends Message
+{
   readonly id: string;
   readonly type: T;
   private readonly _payload: Buffer | MessagePayload[T];
@@ -25,6 +22,8 @@ export class Message<T extends MessageType = MessageType> {
     destinations: number[] = [],
     timestamp: Long,
   ) {
+    super();
+
     this.id = id;
     this.type = type;
     this._payload = payload;
@@ -89,29 +88,4 @@ export class Message<T extends MessageType = MessageType> {
     // No need to cache this because the method is private and only used by the encode method which is cached
     return Serializer.encodePayload(this.type, this._payload);
   }
-
-  static decode(buffer: Buffer): Messages {
-    const message = Serializer.decodeMessage(buffer);
-
-    const messageObject = new Message(
-      message.id,
-      message.type,
-      message.payload,
-      message.source,
-      message.destinations,
-      message.timestamp,
-    ) as unknown as Messages;
-
-    // Store the encoded message for later use
-    messageObject.encoded = buffer;
-
-    return messageObject;
-  }
 }
-
-/**
- * A union of all message types
- */
-export type Messages = {
-  [K in keyof MessagePayload]: Message<K>;
-}[keyof MessagePayload];

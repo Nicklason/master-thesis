@@ -28,7 +28,7 @@ import { getPayloadProtobufType } from "./proto";
  * ordering, which should only be relevant when you get the payload.
  */
 export class Serializer {
-  static encodeMessage(message: DecodedMessages): Buffer {
+    static encodeMessage(message: DecodedMessages): Buffer {
     const writer = Writer.create();
 
     // Version

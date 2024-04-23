@@ -1,5 +1,5 @@
 import tls from "node:tls";
-import { Message } from "../messages/message";
+import { Message } from "../messages/implementations/message";
 import { MessageFactory } from "../messages/factory";
 import { getSubjectFromCert } from "../utils";
 import { EventEmitter } from "node:events";

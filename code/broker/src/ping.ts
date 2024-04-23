@@ -1,7 +1,8 @@
-import { Message } from "./messages/message";
+import { Message, Messages } from "./messages/implementations/message";
 import { MessageType } from "./messages/types";
 import { MessageFactory } from "./messages/factory";
 import { MessagePublisher, MessageSubscriber, Peer } from "./node/pubsub";
+import { SelectiveMessage } from "./messages/implementations/selective-message";
 
 /**
  * Measure the latency between two nodes by sending a ping message and waiting for a pong.
@@ -41,7 +42,7 @@ export async function measureLatency(
         return;
       }
 
-      const message = Message.decode(raw);
+      const message = new SelectiveMessage(raw) as Messages;
       if (message.type !== MessageType.PONG) {
         // Not a pong message
         return;

@@ -1,5 +1,5 @@
 import { MessageBuilder } from "./builder";
-import { Message } from "./message";
+import { Message } from "./implementations/message";
 import {
   MessagePayload,
   MessageType,
