@@ -202,7 +202,8 @@ export class Message<T extends MessageType = MessageType> {
   readonly id: string;
   readonly type: T;
   private readonly _payload: Buffer | MessagePayload[T];
-  private _decodedPayload: MessagePayload[T] | undefined;
+  private decodedPayload: MessagePayload[T] | undefined;
+  private encoded: Buffer | undefined;
   readonly source: number;
   readonly destinations: number[];
   readonly timestamp: Long;
@@ -223,23 +224,19 @@ export class Message<T extends MessageType = MessageType> {
     this.timestamp = timestamp ?? Long.fromNumber(Date.now());
   }
 
-  private getPayload(): Buffer | MessagePayload[T] {
-    return this._payload;
-  }
-
   get payload(): MessagePayload[T] {
-    const payload = this.getPayload();
-
-    // Check if payload is a buffer
-    if (Buffer.isBuffer(payload)) {
-      if (this._decodedPayload === undefined) {
-        this._decodedPayload = decodePayload(this.type, payload);
-      }
-
-      return this._decodedPayload;
+    // Check if payload is not a buffer
+    if (!Buffer.isBuffer(this._payload)) {
+      return this._payload;
     }
 
-    return payload;
+    // Check if payload is not already decoded
+    if (this.decodedPayload === undefined) {
+      this.decodedPayload = decodePayload(this.type, this._payload);
+    }
+
+    // Return the decoded payload
+    return this.decodedPayload;
   }
 
   isDestination(node: number): boolean {
@@ -255,27 +252,32 @@ export class Message<T extends MessageType = MessageType> {
   }
 
   encode(): Buffer {
-    return encodeMessage(this.toJSON());
+    if (this.encoded === undefined) {
+      const message = {
+        id: this.id,
+        type: this.type,
+        payload: this.getEncodedPayload(),
+        source: this.source,
+        destinations: this.destinations,
+      } as unknown as DecodedMessages;
+
+      this.encoded = encodeMessage(message);
+    }
+
+    return this.encoded;
   }
 
-  toJSON(): DecodedMessages {
-    const payload = this.getPayload();
+  private getEncodedPayload(): Buffer | null {
+    if (!this._payload) {
+      return null;
+    }
 
-    const encodedPayload = !payload
-      ? null
-      : Buffer.isBuffer(payload)
-        ? payload
-        : encodePayload(this.type, payload);
+    if (Buffer.isBuffer(this._payload)) {
+      return this._payload;
+    }
 
-    const message = {
-      id: this.id,
-      type: this.type,
-      payload: encodedPayload,
-      source: this.source,
-      destinations: this.destinations,
-    } as unknown as DecodedMessages;
-
-    return message as DecodedMessages;
+    // No need to cache this because the method is private and only used by the encode method which is cached
+    return encodePayload(this.type, this._payload);
   }
 
   static decode(buffer: Buffer): Messages {
