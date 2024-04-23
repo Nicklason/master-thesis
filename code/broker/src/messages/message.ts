@@ -283,13 +283,18 @@ export class Message<T extends MessageType = MessageType> {
   static decode(buffer: Buffer): Messages {
     const message = decodeMessage(buffer, true);
 
-    return new Message(
+    const messageObject = new Message(
       message.id,
       message.type,
       message.payload,
       message.source,
       message.destinations,
     ) as unknown as Messages;
+
+    // Store the encoded message for later use
+    messageObject.encoded = buffer;
+
+    return messageObject;
   }
 }
 
