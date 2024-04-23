@@ -1,4 +1,5 @@
-import { Message, MessageType } from "./messages/message";
+import { Message } from "./messages/message";
+import { MessageType } from "./messages/types";
 import { MessageFactory } from "./messages/factory";
 import { MessagePublisher, MessageSubscriber, Peer } from "./node/pubsub";
 

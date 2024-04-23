@@ -1,4 +1,5 @@
-import { MessageType, Message, Messages, LinkState } from "./messages/message";
+import { Message, Messages } from "./messages/message";
+import { MessageType, LinkState } from "./messages/types";
 import { MessageFactory } from "./messages/factory";
 import { MessageRecorder } from "./messages/recorder";
 import { NodeClient } from "./node/client";
@@ -235,6 +236,20 @@ export class Broker {
       const topology = message.payload;
       topology.nodes.forEach((node) => this.topology.addNode(node));
       topology.edges.forEach((edge) => this.topology.addLinkChange(edge));
+    }
+
+    if (message.type === MessageType.DATA) {
+      console.log(
+        "Received data message from " +
+          message.source +
+          " with payload: " +
+          message.payload.topic +
+          " " +
+          message.payload.value +
+          " (" +
+          message.payload.value.toString("utf8") +
+          ")",
+      );
     }
 
     if (message.isDestination(this.id)) {

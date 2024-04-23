@@ -1,6 +1,6 @@
 import { DirectedGraph, DirectedVertex } from "graph-typed";
 import fs from "fs";
-import { LinkChange, LinkState, Node } from "./messages/message";
+import { LinkChange, LinkState, Node } from "./messages/types";
 import Long from "long";
 
 export interface DecodedLinkChange {

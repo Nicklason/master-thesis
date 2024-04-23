@@ -1,10 +1,10 @@
 import {
   MessagePayload,
   MessageType,
-  Message,
   PayloadNotRequiredMessageType,
   PayloadRequiredMessageType,
-} from "./message";
+} from "./types";
+import { Message } from "./message";
 import { v4 as uuidv4 } from "uuid";
 import Long from "long";
 
@@ -15,6 +15,7 @@ export class MessageBuilder<T extends MessageType> {
   private source: number;
   private destinations: number[] = [];
   private timestamp: Long;
+  private now = Date.now();
 
   constructor(
     type: PayloadNotRequiredMessageType,
@@ -60,10 +61,6 @@ export class MessageBuilder<T extends MessageType> {
   }
 
   build(): Message<T> {
-    if (this.id === undefined) {
-      this.id = uuidv4();
-    }
-
     if (this.type === undefined) {
       throw new Error("Message type is required");
     } else if (this.source === undefined) {
@@ -71,12 +68,12 @@ export class MessageBuilder<T extends MessageType> {
     }
 
     return new Message(
-      this.id,
+      this.id ?? uuidv4(),
       this.type,
       this.payload,
       this.source,
       this.destinations,
-      this.timestamp,
+      this.timestamp ?? Long.fromNumber(this.now),
     );
   }
 }

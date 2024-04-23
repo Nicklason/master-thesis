@@ -1,12 +1,12 @@
 import { MessageBuilder } from "./builder";
+import { Message } from "./message";
 import {
-  MessageType,
   MessagePayload,
+  MessageType,
   PayloadNotRequiredMessageType,
   PayloadRequiredMessageType,
-  Message,
   TopologyMessagePayload,
-} from "./message";
+} from "./types";
 
 export class MessageFactory {
   private static source: number;
