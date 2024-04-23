@@ -202,6 +202,7 @@ export class Message<T extends MessageType = MessageType> {
   readonly id: string;
   readonly type: T;
   private readonly _payload: Buffer | MessagePayload[T];
+  private _decodedPayload: MessagePayload[T] | undefined;
   readonly source: number;
   readonly destinations: number[];
   readonly timestamp: Long;
@@ -231,7 +232,11 @@ export class Message<T extends MessageType = MessageType> {
 
     // Check if payload is a buffer
     if (Buffer.isBuffer(payload)) {
-      return decodePayload(this.type, payload);
+      if (this._decodedPayload === undefined) {
+        this._decodedPayload = decodePayload(this.type, payload);
+      }
+
+      return this._decodedPayload;
     }
 
     return payload;
