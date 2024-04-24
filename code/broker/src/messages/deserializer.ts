@@ -1,5 +1,5 @@
 import Long from "long";
-import { Reader } from "protobufjs";
+import { Reader, Writer } from "protobufjs";
 
 interface FieldValue<T> {
   value: T;
@@ -10,39 +10,58 @@ interface FieldValue<T> {
 interface Field<T = unknown, D = unknown> {
   name: T;
   previous: Field | null;
-  handler: (reader: Reader) => D;
+  next: Field | null;
+  read: (reader: Reader) => D;
+  write: (writer: Writer, value: D) => void;
 }
 
+/**
+ * DeserializerBuilder is a builder for creating deserializers for a specific type.
+ * The deserializer is used to read and write values from a buffer.
+ */
 export class DeserializerBuilder<T extends Record<string, unknown>> {
   private fields: Map<keyof T, Field<keyof T, T[keyof T]>> = new Map();
   private lastField: Field<keyof T, T[keyof T]> | null = null;
 
   addField<K extends keyof T>(
     name: K,
-    handler: (reader: Reader) => T[K],
+    read: (reader: Reader) => T[K],
+    write: (writer: Writer, value: T[K]) => void,
   ): void {
     const field: Field<keyof T, T[keyof T]> = {
       name,
       previous: this.lastField,
-      handler,
+      next: null,
+      read,
+      write,
     };
+
+    if (this.lastField) {
+      this.lastField.next = field;
+    }
 
     this.fields.set(name, field);
     this.lastField = field;
   }
 
-  build(reader: Reader): Deserializer<T> {
-    return new Deserializer<T>(reader, this.fields);
+  build(buffer: Buffer): Deserializer<T> {
+    return new Deserializer<T>(buffer, this.fields);
   }
 }
 
+/**
+ * Deserializer is used to read and write values from a buffer.
+ */
 export class Deserializer<T extends Record<string, any>> {
   private readonly values: Map<keyof T, FieldValue<any>> = new Map();
+  private readonly reader: Reader;
 
   constructor(
-    private readonly reader: Reader,
+    buffer: Buffer,
     private readonly fields: Map<keyof T, Field<keyof T, T[keyof T]>>,
-  ) {}
+  ) {
+    this.reader = Reader.create(buffer);
+  }
 
   getValue<K extends keyof T>(name: K): FieldValue<T[K]> {
     const field = this.fields.get(name);
@@ -59,7 +78,7 @@ export class Deserializer<T extends Record<string, any>> {
       }
 
       const start = this.reader.pos;
-      const value = field.handler(this.reader) as V;
+      const value = field.read(this.reader) as V;
       const end = this.reader.pos;
       const length = end - start;
 
@@ -71,6 +90,67 @@ export class Deserializer<T extends Record<string, any>> {
     }
 
     return this.values.get(field.name)!;
+  }
+
+  setValue<K extends keyof T>(name: K, value: T[K]): void {
+    const field = this.fields.get(name);
+    if (!field) {
+      throw new Error(`Field ${name.toString()} not found`);
+    }
+
+    // Get the current value of the field in order to know the position and length
+    const fieldValue = this.getFieldValue(field as Field<K, T[K]>);
+
+    // Create writer for writing the new value to a new buffer
+    const writer = Writer.create();
+    field.write(writer, value);
+    const data = writer.finish();
+
+    // Create new buffer with the new value
+    const buffer = Buffer.concat([
+      this.reader.buf.subarray(0, fieldValue.position),
+      data,
+      this.reader.buf.subarray(fieldValue.position + fieldValue.length),
+    ]);
+
+    // Calculate the difference in length between the new value and the old value
+    const lengthDifference = data.length - fieldValue.length;
+
+    // Update reader
+    this.reader.buf = buffer;
+    this.reader.pos = this.reader.pos + lengthDifference;
+    this.reader.len = this.reader.buf.length;
+
+    // Update existing field value with the new value
+    fieldValue.value = value;
+    fieldValue.length = data.length;
+
+    if (field.next && lengthDifference !== 0) {
+      // Push the values of next fields down
+      this.pushValues(field.next as Field<string>, lengthDifference);
+    }
+  }
+
+  getBuffer(): Buffer {
+    return Buffer.from(this.reader.buf);
+  }
+
+  private pushValues<K extends Field<string>>(
+    field: K,
+    lengthDifference: number,
+  ): void {
+    const fieldValue = this.values.get(field.name);
+    if (!fieldValue) {
+      // No field value. This means that the field was not read yet, so we don't
+      // need to push the values
+      return;
+    }
+
+    fieldValue.position += lengthDifference;
+
+    if (field.next) {
+      this.pushValues(field.next as Field<string>, lengthDifference);
+    }
   }
 }
 
@@ -85,42 +165,87 @@ const builder = new DeserializerBuilder<{
   timestamp: Long;
 }>();
 
-builder.addField("version", (reader) => {
-  return reader.uint32();
-});
+builder.addField(
+  "version",
+  (reader) => {
+    return reader.uint32();
+  },
+  (writer, value) => {
+    writer.uint32(value);
+  },
+);
 
-builder.addField("id", (reader) => {
-  return reader.string();
-});
+builder.addField(
+  "id",
+  (reader) => {
+    return reader.string();
+  },
+  (writer, value) => {
+    return writer.string(value);
+  },
+);
 
-builder.addField("destinations", (reader) => {
-  const count = reader.uint32();
+builder.addField(
+  "destinations",
+  (reader) => {
+    const count = reader.uint32();
 
-  const destinations: number[] = [];
-  for (let i = 0; i < count; i++) {
-    destinations.push(reader.uint32());
-  }
+    const destinations: number[] = [];
+    for (let i = 0; i < count; i++) {
+      destinations.push(reader.uint32());
+    }
 
-  return destinations;
-});
+    return destinations;
+  },
+  (writer, value) => {
+    writer.uint32(value.length);
+    for (const destination of value) {
+      writer.uint32(destination);
+    }
+  },
+);
 
-builder.addField("source", (reader) => {
-  return reader.uint32();
-});
+builder.addField(
+  "source",
+  (reader) => {
+    return reader.uint32();
+  },
+  (writer, value) => {
+    writer.uint32(value);
+  },
+);
 
-builder.addField("type", (reader) => {
-  return reader.uint32();
-});
+builder.addField(
+  "type",
+  (reader) => {
+    return reader.uint32();
+  },
+  (writer, value) => {
+    writer.uint32(value);
+  },
+);
 
-builder.addField("payload", (reader) => {
-  return Buffer.from(reader.bytes());
-});
+builder.addField(
+  "payload",
+  (reader) => {
+    return Buffer.from(reader.bytes());
+  },
+  (writer, value) => {
+    writer.bytes(value);
+  },
+);
 
-builder.addField("timestamp", (reader) => {
-  const timestamp = reader.uint64();
-  return new Long(timestamp.low, timestamp.high, timestamp.unsigned);
-});
+builder.addField(
+  "timestamp",
+  (reader) => {
+    const timestamp = reader.uint64();
+    return new Long(timestamp.low, timestamp.high, timestamp.unsigned);
+  },
+  (writer, value) => {
+    writer.uint64(value);
+  },
+);
 
-export function messageDeserializer(buffer: Buffer) {
-  return builder.build(Reader.create(buffer));
+export function messageSerializer(data: Buffer) {
+  return builder.build(data);
 }

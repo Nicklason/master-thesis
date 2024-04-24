@@ -1,8 +1,5 @@
 import Long from "long";
-import {
-  MessagePayload,
-  MessageType,
-} from "../types";
+import { MessagePayload, MessageType } from "../types";
 
 export abstract class Message<T extends MessageType = MessageType> {
   public abstract get id(): string;

@@ -1,19 +1,18 @@
 import { MessagePayload, MessageType } from "../types";
 import Long from "long";
 import { Serializer } from "../serializer";
-import { messageDeserializer } from "../deserializer";
+import { messageSerializer } from "../deserializer";
 import { Message } from "./message";
 
-export class SelectiveMessage<T extends MessageType = MessageType> extends Message
-{
-  private readonly deserializer: ReturnType<typeof messageDeserializer>;
-  private readonly encoded: Buffer;
+export class SelectiveMessage<
+  T extends MessageType = MessageType,
+> extends Message {
+  private readonly deserializer: ReturnType<typeof messageSerializer>;
 
   constructor(data: Buffer) {
-    super(); 
-    
-    this.encoded = data;
-    this.deserializer = messageDeserializer(this.encoded);
+    super();
+
+    this.deserializer = messageSerializer(data);
   }
 
   get id(): string {
@@ -26,8 +25,7 @@ export class SelectiveMessage<T extends MessageType = MessageType> extends Messa
 
   get payload(): MessagePayload[T] {
     const payload = this.deserializer.getValue("payload").value;
-
-    if (payload === null) {
+    if (payload.byteLength === 0) {
       return null as any;
     }
 
@@ -40,6 +38,10 @@ export class SelectiveMessage<T extends MessageType = MessageType> extends Messa
 
   get destinations(): number[] {
     return this.deserializer.getValue("destinations").value;
+  }
+
+  setDestinations(destinations: number[]) {
+    this.deserializer.setValue("destinations", destinations);
   }
 
   get timestamp(): Long {
@@ -55,6 +57,6 @@ export class SelectiveMessage<T extends MessageType = MessageType> extends Messa
   }
 
   encode(): Buffer {
-    return this.encoded;
+    return this.deserializer.getBuffer();
   }
 }
