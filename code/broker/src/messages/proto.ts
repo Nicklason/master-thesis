@@ -3,6 +3,35 @@ import { MessageType } from "./types";
 
 export const root = protobuf.Root.fromJSON({
   nested: {
+    Message: {
+      fields: {
+        id: {
+          type: "string",
+          id: 1,
+        },
+        type: {
+          type: "uint32",
+          id: 2,
+        },
+        payload: {
+          type: "bytes",
+          id: 3,
+        },
+        source: {
+          type: "uint32",
+          id: 4,
+        },
+        destinations: {
+          type: "uint32",
+          id: 5,
+          rule: "repeated",
+        },
+        timestamp: {
+          type: "uint64",
+          id: 6,
+        },
+      },
+    },
     ServerHelloMessagePayload: {
       fields: {},
     },
