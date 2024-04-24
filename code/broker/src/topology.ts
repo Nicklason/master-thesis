@@ -37,7 +37,7 @@ export class Topology {
       parsed.edges
         .map((change) => ({
           ...change,
-          timestamp: Long.fromString(change.timestamp),
+          timestamp: Long.fromString(change.timestamp, true),
         }))
         .forEach((change) => topology.addLinkChange(change));
     }
