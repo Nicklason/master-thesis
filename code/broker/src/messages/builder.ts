@@ -71,10 +71,10 @@ export class MessageBuilder<T extends MessageType> {
     return new LocalMessage(
       this.id ?? uuidv4(),
       this.type,
-      this.payload,
+      (this.payload ?? null) as MessagePayload[T],
       this.source,
       this.destinations,
-      this.timestamp ?? Long.fromNumber(this.now),
+      this.timestamp ?? Long.fromNumber(this.now, true),
     );
   }
 }
