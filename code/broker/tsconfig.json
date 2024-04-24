@@ -4,6 +4,8 @@
     "module": "node16",
     "target": "ES2022",
     "strictNullChecks": true,
-    "outDir": "./dist"
-  }
+    "outDir": "./dist",
+    "esModuleInterop": true
+  },
+  "exclude": ["./src/**/*.spec.ts"]
 }

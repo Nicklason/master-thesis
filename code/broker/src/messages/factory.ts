@@ -9,9 +9,9 @@ import {
 } from "./types";
 
 export class MessageFactory {
-  private static source: number;
+  private static source: number | undefined;
 
-  static setSource(source: number): void {
+  static setSource(source?: number): void {
     this.source = source;
   }
 
@@ -25,7 +25,7 @@ export class MessageFactory {
   static create<T extends MessageType>(type: T, payload: any = null) {
     // @ts-expect-error - This is a hack to get around the fact that the type and payload are not being inferred correctly
     const builder = new MessageBuilder(type, payload);
-    builder.setSource(this.source);
+    if (this.source) builder.setSource(this.source);
     return builder;
   }
 
