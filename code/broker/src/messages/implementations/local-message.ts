@@ -1,4 +1,4 @@
-import { Serializer } from "../serializer";
+import { TotalTranscoder } from "../encoding/total-transcoder";
 import {
   DecodedMessage,
   DecodedMessages,
@@ -50,7 +50,7 @@ export class LocalMessage<T extends MessageType> extends Message {
         timestamp: this.timestamp,
       } satisfies DecodedMessage as DecodedMessages;
 
-      this.encoded = Serializer.encodeMessage(message);
+      this.encoded = TotalTranscoder.encodeMessage(message);
     }
 
     return this.encoded;
@@ -66,6 +66,6 @@ export class LocalMessage<T extends MessageType> extends Message {
     }
 
     // No need to cache this because the method is private and only used by the encode method which is cached
-    return Serializer.encodePayload(this.type, this._payload);
+    return TotalTranscoder.encodePayload(this.type, this._payload);
   }
 }

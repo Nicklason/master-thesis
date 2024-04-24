@@ -1,18 +1,18 @@
 import { MessagePayload, MessageType } from "../types";
 import Long from "long";
-import { Serializer } from "../serializer";
-import { messageSerializer } from "../deserializer";
+import { TotalTranscoder } from "../encoding/total-transcoder";
+import { messageIncrementalTranscoder } from "../encoding/incremental-transcoder";
 import { Message } from "./message";
 
 export class SelectiveMessage<
   T extends MessageType = MessageType,
 > extends Message {
-  private readonly deserializer: ReturnType<typeof messageSerializer>;
+  private readonly deserializer: ReturnType<typeof messageIncrementalTranscoder>;
 
   constructor(data: Buffer) {
     super();
 
-    this.deserializer = messageSerializer(data);
+    this.deserializer = messageIncrementalTranscoder(data);
   }
 
   get id(): string {
@@ -25,11 +25,11 @@ export class SelectiveMessage<
 
   get payload(): MessagePayload[T] {
     const payload = this.deserializer.getValue("payload").value;
-    if (payload.byteLength === 0) {
+    if (payload === null) {
       return null as any;
     }
 
-    return Serializer.decodePayload(this.type, payload);
+    return TotalTranscoder.decodePayload(this.type, payload);
   }
 
   get source(): number {

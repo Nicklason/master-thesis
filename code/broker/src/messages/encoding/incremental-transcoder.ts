@@ -11,15 +11,16 @@ interface Field<T = unknown, D = unknown> {
   name: T;
   previous: Field | null;
   next: Field | null;
+  index: number;
   read: (reader: Reader) => D;
   write: (writer: Writer, value: D) => void;
 }
 
 /**
- * DeserializerBuilder is a builder for creating deserializers for a specific type.
+ * Builder for creating deserializers for a specific type.
  * The deserializer is used to read and write values from a buffer.
  */
-export class DeserializerBuilder<T extends Record<string, unknown>> {
+export class IncrementalTranscoderBuilder<T extends Record<string, unknown>> {
   private fields: Map<keyof T, Field<keyof T, T[keyof T]>> = new Map();
   private lastField: Field<keyof T, T[keyof T]> | null = null;
 
@@ -32,6 +33,7 @@ export class DeserializerBuilder<T extends Record<string, unknown>> {
       name,
       previous: this.lastField,
       next: null,
+      index: this.fields.size,
       read,
       write,
     };
@@ -44,16 +46,16 @@ export class DeserializerBuilder<T extends Record<string, unknown>> {
     this.lastField = field;
   }
 
-  build(buffer: Buffer): Deserializer<T> {
-    return new Deserializer<T>(buffer, this.fields);
+  build(buffer: Buffer): IncrementalTranscoder<T> {
+    return new IncrementalTranscoder<T>(buffer, this.fields);
   }
 }
 
 /**
- * Deserializer is used to read and write values from a buffer.
+ * Used to read and write values from a buffer.
  */
-export class Deserializer<T extends Record<string, any>> {
-  private readonly values: Map<keyof T, FieldValue<any>> = new Map();
+export class IncrementalTranscoder<T extends Record<string, any>> {
+  private readonly values: FieldValue<any>[] = [];
   private readonly reader: Reader;
 
   constructor(
@@ -71,7 +73,7 @@ export class Deserializer<T extends Record<string, any>> {
   private getFieldValue<K extends keyof T, V>(
     field: Field<K, V>,
   ): FieldValue<V> {
-    if (!this.values.has(field.name)) {
+    if (this.values.length <= field.index) {
       // Get value of previous field
       if (field.previous !== null) {
         this.getFieldValue(field.previous as Field<keyof T, T[keyof T]>);
@@ -82,14 +84,14 @@ export class Deserializer<T extends Record<string, any>> {
       const end = this.reader.pos;
       const length = end - start;
 
-      this.values.set(field.name, {
+      this.values.push({
         value,
         position: start,
         length,
       });
     }
 
-    return this.values.get(field.name)!;
+    return this.values[field.index];
   }
 
   setValue<K extends keyof T>(name: K, value: T[K]): void {
@@ -139,29 +141,20 @@ export class Deserializer<T extends Record<string, any>> {
     field: K,
     lengthDifference: number,
   ): void {
-    const fieldValue = this.values.get(field.name);
-    if (!fieldValue) {
-      // No field value. This means that the field was not read yet, so we don't
-      // need to push the values
-      return;
-    }
-
-    fieldValue.position += lengthDifference;
-
-    if (field.next) {
-      this.pushValues(field.next as Field<string>, lengthDifference);
+    for (let i = field.index; i < this.values.length; i++) {
+      this.values[i].position += lengthDifference;
     }
   }
 }
 
 // Create a deserialize builder for messages
-const builder = new DeserializerBuilder<{
+const builder = new IncrementalTranscoderBuilder<{
   version: number;
   id: string;
   destinations: number[];
   source: number;
   type: number;
-  payload: Buffer;
+  payload: Buffer | null;
   timestamp: Long;
 }>();
 
@@ -228,10 +221,11 @@ builder.addField(
 builder.addField(
   "payload",
   (reader) => {
-    return Buffer.from(reader.bytes());
+    const value = reader.bytes();
+    return value.length === 0 ? null : Buffer.from(value);
   },
   (writer, value) => {
-    writer.bytes(value);
+    writer.bytes(value ?? new Uint8Array(0));
   },
 );
 
@@ -246,6 +240,6 @@ builder.addField(
   },
 );
 
-export function messageSerializer(data: Buffer) {
+export function messageIncrementalTranscoder(data: Buffer) {
   return builder.build(data);
 }
