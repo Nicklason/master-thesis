@@ -245,21 +245,34 @@ export class Broker {
         const topology = message.payload;
         topology.nodes.forEach((node) => this.topology.addNode(node));
         topology.edges.forEach((edge) => this.topology.addLinkChange(edge));
+      } else if (message.type === MessageType.DATA) {
+        console.log(
+          "Received data message from " +
+            message.source +
+            " with payload: " +
+            message.payload.topic +
+            " " +
+            message.payload.value +
+            " (" +
+            message.payload.value.toString("utf8") +
+            ")",
+        );
       }
-    }
 
-    if (message.type === MessageType.DATA) {
-      console.log(
-        "Received data message from " +
-          message.source +
-          " with payload: " +
-          message.payload.topic +
-          " " +
-          message.payload.value +
-          " (" +
-          message.payload.value.toString("utf8") +
-          ")",
-      );
+      // TODO: Might have to better support removing destinations from a message
+      // If it is not a broadcast message and we then remove a destination then
+      // it may "turn into" a broadcast message, which is not what we want
+
+      // Not a broadcast message, we may remove ourselves from the destinations
+      if (!message.isBroadcast()) {
+        // Remove self from destinations
+        message.removeDestination(this.id);
+        // Check if message has any destinations left
+        if (message.destinations.length === 0) {
+          // Message has no more destinations, stop routing
+          return;
+        }
+      }
     }
 
     if (message.source === this.id) {

@@ -39,6 +39,10 @@ export class LocalMessage<T extends MessageType> extends Message {
     return this._payload;
   }
 
+  removeDestination(destination: number): void {
+    // Does not really make sense to remove destinations from a local message
+  }
+
   encode(): Buffer {
     if (this.encoded === undefined) {
       const message = {

@@ -35,17 +35,20 @@ describe("SelectiveMessage", () => {
     expect(selective.timestamp).toEqual(truth.timestamp);
   });
 
-  test("set destinations", () => {
-    const truth = new MessageBuilder(MessageType.PING).setSource(1).build();
+  test("remove destination", () => {
+    const truth = new MessageBuilder(MessageType.PING)
+      .setSource(1)
+      .setDestinations([1, 2, 3])
+      .build();
 
     const selective = new SelectiveMessage(truth.encode());
 
-    selective.setDestinations([1, 2, 3]);
+    selective.removeDestination(3);
 
     expect(selective.id).toEqual(truth.id);
 
     // Make sure value is set
-    expect(selective.destinations).toEqual([1, 2, 3]);
+    expect(selective.destinations).toEqual([1, 2]);
 
     // Make sure next values are read correctly
     expect(selective.source).toEqual(truth.source);

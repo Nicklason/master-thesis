@@ -9,6 +9,8 @@ export abstract class Message<T extends MessageType = MessageType> {
   public abstract get destinations(): number[];
   public abstract get timestamp(): Long;
 
+  abstract removeDestination(destination: number): void;
+
   isDestination(node: number): boolean {
     return this.isBroadcast() || this.destinations.includes(node);
   }

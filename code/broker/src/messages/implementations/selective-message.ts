@@ -7,7 +7,9 @@ import { Message } from "./message";
 export class SelectiveMessage<
   T extends MessageType = MessageType,
 > extends Message {
-  private readonly deserializer: ReturnType<typeof messageIncrementalTranscoder>;
+  private readonly deserializer: ReturnType<
+    typeof messageIncrementalTranscoder
+  >;
 
   constructor(data: Buffer) {
     super();
@@ -40,8 +42,14 @@ export class SelectiveMessage<
     return this.deserializer.getValue("destinations").value;
   }
 
-  setDestinations(destinations: number[]) {
-    this.deserializer.setValue("destinations", destinations);
+  removeDestination(destination: number): void {
+    const index = this.destinations.indexOf(destination);
+    if (index === -1) {
+      return;
+    }
+
+    this.destinations.splice(index, 1);
+    this.deserializer.setValue("destinations", this.destinations);
   }
 
   get timestamp(): Long {
