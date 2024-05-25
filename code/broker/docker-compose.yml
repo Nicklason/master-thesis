@@ -1,0 +1,145 @@
+version: "3"
+services:
+  broker-1:
+    image: broker
+    container_name: broker-1
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/broker-1:/app/data
+  broker-2:
+    image: broker
+    container_name: broker-2
+    volumes:
+      - ./data/broker-2:/app/data
+  broker-3:
+    image: broker
+    container_name: broker-3
+    volumes:
+      - ./data/broker-3:/app/data
+  broker-4:
+    image: broker
+    container_name: broker-4
+    volumes:
+      - ./data/broker-4:/app/data
+  broker-5:
+    image: broker
+    container_name: broker-5
+    volumes:
+      - ./data/broker-5:/app/data
+  broker-6:
+    image: broker
+    container_name: broker-6
+    volumes:
+      - ./data/broker-6:/app/data
+  broker-7:
+    image: broker
+    container_name: broker-7
+    volumes:
+      - ./data/broker-7:/app/data
+  broker-8:
+    image: broker
+    container_name: broker-8
+    volumes:
+      - ./data/broker-8:/app/data
+  broker-9:
+    image: broker
+    container_name: broker-9
+    volumes:
+      - ./data/broker-9:/app/data
+  broker-10:
+    image: broker
+    container_name: broker-10
+    volumes:
+      - ./data/broker-10:/app/data
+  broker-11:
+    image: broker
+    container_name: broker-11
+    volumes:
+      - ./data/broker-11:/app/data
+  broker-12:
+    image: broker
+    container_name: broker-12
+    volumes:
+      - ./data/broker-12:/app/data
+  broker-13:
+    image: broker
+    container_name: broker-13
+    volumes:
+      - ./data/broker-13:/app/data
+  broker-14:
+    image: broker
+    container_name: broker-14
+    volumes:
+      - ./data/broker-14:/app/data
+  broker-15:
+    image: broker
+    container_name: broker-15
+    volumes:
+      - ./data/broker-15:/app/data
+  broker-16:
+    image: broker
+    container_name: broker-16
+    volumes:
+      - ./data/broker-16:/app/data
+  broker-17:
+    image: broker
+    container_name: broker-17
+    volumes:
+      - ./data/broker-17:/app/data
+  broker-18:
+    image: broker
+    container_name: broker-18
+    volumes:
+      - ./data/broker-18:/app/data
+  broker-19:
+    image: broker
+    container_name: broker-19
+    volumes:
+      - ./data/broker-19:/app/data
+  broker-20:
+    image: broker
+    container_name: broker-20
+    volumes:
+      - ./data/broker-20:/app/data
+  broker-21:
+    image: broker
+    container_name: broker-21
+    volumes:
+      - ./data/broker-21:/app/data
+  broker-22:
+    image: broker
+    container_name: broker-22
+    volumes:
+      - ./data/broker-22:/app/data
+  broker-23:
+    image: broker
+    container_name: broker-23
+    volumes:
+      - ./data/broker-23:/app/data
+  broker-24:
+    image: broker
+    container_name: broker-24
+    volumes:
+      - ./data/broker-24:/app/data
+  broker-25:
+    image: broker
+    container_name: broker-25
+    volumes:
+      - ./data/broker-25:/app/data
+  broker-26:
+    image: broker
+    container_name: broker-26
+    volumes:
+      - ./data/broker-26:/app/data
+  broker-27:
+    image: broker
+    container_name: broker-27
+    volumes:
+      - ./data/broker-27:/app/data
+  broker-28:
+    image: broker
+    container_name: broker-28
+    volumes:
+      - ./data/broker-28:/app/data
+volumes: {}
