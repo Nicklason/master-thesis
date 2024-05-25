@@ -32,6 +32,9 @@ importers:
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
+      uuidv7:
+        specifier: ^0.6.3
+        version: 0.6.3
       winston:
         specifier: ^3.13.0
         version: 3.13.0
@@ -1624,6 +1627,10 @@ packages:
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    hasBin: true
+
+  uuidv7@0.6.3:
+    resolution: {integrity: sha512-zV3eW2NlXTsun/aJ7AixxZjH/byQcH/r3J99MI0dDEkU2cJIBJxhEWUHDTpOaLPRNhebPZoeHuykYREkI9HafA==}
     hasBin: true
 
   v8-to-istanbul@9.2.0:
@@ -3563,6 +3570,8 @@ snapshots:
   utils-merge@1.0.1: {}
 
   uuid@9.0.1: {}
+
+  uuidv7@0.6.3: {}
 
   v8-to-istanbul@9.2.0:
     dependencies:
