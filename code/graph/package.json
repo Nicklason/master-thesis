@@ -1,0 +1,10 @@
+{
+  "scripts": {},
+  "dependencies": {
+    "graph-typed": "^1.52.0",
+    "yaml": "^2.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7"
+  }
+}

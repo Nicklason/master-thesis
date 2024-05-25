@@ -1,0 +1,55 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      graph-typed:
+        specifier: ^1.52.0
+        version: 1.52.0
+      yaml:
+        specifier: ^2.4.1
+        version: 2.4.1
+    devDependencies:
+      '@types/node':
+        specifier: ^20.12.7
+        version: 20.12.7
+
+packages:
+
+  '@types/node@20.12.7':
+    resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
+
+  data-structure-typed@1.52.0:
+    resolution: {integrity: sha512-jJhARI44PxwvSIHaTl0FyzrlmJodInT+RiVCSZ1l9WqzENQNrupnzCukmmp7OW1/TQE2d17mQvbdrno/ohFn9Q==}
+
+  graph-typed@1.52.0:
+    resolution: {integrity: sha512-UlgfxxFc974lIPwYYNxM202mpdFMqZCBF7+zoxNcWfv9pKzHpQ5fwYCB2NaDTILOkrcGWPRqAumYPcZBlAwbfg==}
+
+  undici-types@5.26.5:
+    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+
+  yaml@2.4.1:
+    resolution: {integrity: sha512-pIXzoImaqmfOrL7teGUBt/T7ZDnyeGBWyXQBvOVhLkWLN37GXv8NMLK406UY6dS51JfcQHsmcW5cJ441bHg6Lg==}
+    engines: {node: '>= 14'}
+    hasBin: true
+
+snapshots:
+
+  '@types/node@20.12.7':
+    dependencies:
+      undici-types: 5.26.5
+
+  data-structure-typed@1.52.0: {}
+
+  graph-typed@1.52.0:
+    dependencies:
+      data-structure-typed: 1.52.0
+
+  undici-types@5.26.5: {}
+
+  yaml@2.4.1: {}

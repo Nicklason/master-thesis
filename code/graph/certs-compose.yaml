@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  certs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # Password for the CA key
+      - CA_PASS=1234
+    volumes:
+      - ./data:/app/data
