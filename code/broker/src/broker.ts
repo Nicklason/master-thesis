@@ -258,6 +258,12 @@ export class Broker {
           // Something changed, broadcast the changes
           const changedTopology = { nodes: changedNodes, edges: changedLinks };
           const newTopology = MessageFactory.topology(changedTopology);
+
+          // Only send to neighbors
+          const neighbors = this.topology.getNeighbors(this.id);
+          // and filter out the source of the topology message
+          neighbors.splice(neighbors.indexOf(message.source), 1);
+          newTopology.setDestinations(neighbors);
           this.publish(newTopology.build());
         }
       } else if (message.type === MessageType.DATA) {

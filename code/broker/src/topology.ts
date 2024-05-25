@@ -120,6 +120,14 @@ export class Topology {
     return path[1].key as number;
   }
 
+  getNeighbors(node: number): number[] {
+    if (!this.graph.hasVertex(node)) {
+      return [];
+    }
+
+    return this.graph.getNeighbors(node).map((vertex) => vertex.key as number);
+  }
+
   toJSON(): DecodedTopology {
     const nodes: Node[] = [];
 
