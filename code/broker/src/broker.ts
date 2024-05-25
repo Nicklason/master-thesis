@@ -247,8 +247,19 @@ export class Broker {
         this.logger.debug(`Received topology from ${message.source}`);
         // Update topology with the received topology
         const topology = message.payload;
-        topology.nodes.forEach((node) => this.topology.addNode(node));
-        topology.edges.forEach((edge) => this.topology.addLinkChange(edge));
+
+        // Update topology and find changes
+        const changedNodes = topology.nodes.filter((node) => this.topology.addNode(node));
+        const changedLinks = topology.edges.filter((edge) => this.topology.addLinkChange(edge));
+
+        this.logger.info(`Changed nodes ${changedNodes.length}, changed links ${changedLinks.length}`);
+        
+        if (changedNodes.length !== 0 || changedLinks.length !== 0) {
+          // Something changed, broadcast the changes
+          const changedTopology = { nodes: changedNodes, edges: changedLinks };
+          const newTopology = MessageFactory.topology(changedTopology);
+          this.publish(newTopology.build());
+        }
       } else if (message.type === MessageType.DATA) {
         console.log(
           "Received data message from " +

@@ -45,14 +45,15 @@ export class Topology {
     return topology;
   }
 
-  addLinkChange(change: LinkChange): void {
+  addLinkChange(change: LinkChange): boolean {
     // Create unique key for the change
     const key = `${change.source}-${change.target}`;
 
     const existing = this.changes.get(key);
+    // Last write wins
     if (existing && existing.timestamp.greaterThan(change.timestamp)) {
       // Existing change is older than the provided change. Ignore it.
-      return;
+      return false;
     }
 
     // Save the change
@@ -60,41 +61,50 @@ export class Topology {
 
     switch (change.state) {
       case LinkState.UP:
-        this.addEdge(change.source, change.target);
-        break;
+        return this.addEdge(change.source, change.target);
       case LinkState.DOWN:
-        this.removeEdge(change.source, change.target);
-        break;
+        return this.removeEdge(change.source, change.target);
     }
   }
 
-  addNode(node: number): void {
+  addNode(node: number): boolean {
     if (this.graph.hasVertex(node)) {
-      return;
+      return false;
     }
 
     this.graph.addVertex(new DirectedVertex(node));
+    return true;
   }
 
-  private addEdge(from: number, to: number, weight: number = 1): void {
-    this.addNode(from);
-    this.addNode(to);
+  private addEdge(from: number, to: number, weight: number = 1): boolean {
+    let changed = false;
+
+    if (this.addNode(from) || this.addNode(to)) {
+      changed = true;
+    }
 
     const existing = this.graph.getEdge(from, to);
     if (existing) {
-      existing.weight = weight;
-      return;
+      if (existing.weight !== weight) {
+        existing.weight = weight;
+        return true;
+      }
+
+      return false;
     }
 
     this.graph.addEdge(from, to);
+
+    return true;
   }
 
-  private removeEdge(from: number, to: number): void {
+  private removeEdge(from: number, to: number): boolean {
     if (!this.graph.hasEdge(from, to)) {
-      return;
+      return false;
     }
 
     this.graph.deleteEdge(from, to);
+    return true;
   }
 
   getNextHop(from: number, to: number): number | undefined {
