@@ -81,9 +81,13 @@ export class Broker {
       .readFileSync(path.join(this.dir, "/peers.json"))
       .toString("utf8");
 
-    const configurations = JSON.parse(raw);
-
-    return configurations;
+      try {
+        const configurations = JSON.parse(raw);
+        return configurations;
+      } catch (e) {
+        this.logger.error("Error parsing peers.json", e);
+        return [];
+      }
   }
 
   getId(): number {
