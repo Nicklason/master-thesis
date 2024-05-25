@@ -111,6 +111,20 @@ export class NodeServer implements Peer, MessagePublisher, MessageSubscriber {
     return Promise.resolve();
   }
 
+  getSocket(id: number): tls.TLSSocket | undefined {
+    // Find sockets with the given id
+    const sockets: tls.TLSSocket[] = [];
+
+    for (const [socket, clientId] of this.clients) {
+      if (clientId === id) {
+        sockets.push(socket);
+      }
+    }
+  
+    // Return a random socket
+    return sockets[Math.floor(Math.random() * sockets.length)];
+  }
+
   private addClient(socket: tls.TLSSocket): void {
     const id = NodeServer.getClientId(socket);
     if (id === undefined) {

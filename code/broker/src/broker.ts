@@ -223,10 +223,17 @@ export class Broker {
         const pong = MessageFactory.pong(message.id, message.source);
         this.publish(pong);
       } else if (message.type === MessageType.CLIENT_HELLO) {
-        // Respond with entire topology
+        // Respond with entire topology as part of the handshake
         const topology = MessageFactory.topology(this.topology.export());
         topology.setDestinations([message.source]);
-        this.publish(topology.build());
+
+        // Get the socket for the client
+        const socket = this.server.getSocket(message.source);
+        // Socket should exist, but just in case we check
+        if (socket) {
+          // Send the topology to the client using their socket
+          socket.write(topology.build().encode());
+        }
       } else if (
         message.type === MessageType.NODE_CONNECT ||
         message.type === MessageType.NODE_DISCONNECT
