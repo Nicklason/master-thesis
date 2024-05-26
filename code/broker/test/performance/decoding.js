@@ -26,28 +26,56 @@ const jsonEncode = JSON.stringify(data);
 const protoEncode = Buffer.from(MessageProto.encode(data).finish());
 
 suite
-  .add("JSON", () => {
+  .add("JSON (total)", () => {
     JSON.parse(jsonEncode);
   })
-  .add("Protobuf", () => {
+  .add("Protobuf (total)", () => {
     MessageProto.decode(protoEncode);
   })
-  .add("Custom", () => {
+  .add("Custom (total)", () => {
     TotalTranscoder.decodeMessage(customEncode);
   })
-  .add("Custom (selective)", () => {
+  .add("Custom (version)", () => {
+    new SelectiveMessage(customEncode).version;
+  })
+  .add("Custom (id)", () => {
+    new SelectiveMessage(customEncode).id;
+  })
+  .add("Custom (timestamp)", () => {
     // Timestamp is the last value
     new SelectiveMessage(customEncode).timestamp;
   })
-  .add("Custom (selective, only id)", () => {
-    // Timestamp is the last value
-    new SelectiveMessage(customEncode).id;
-  })
-  .add("Custom (reader, only id)", () => {
+  .add("Reader (total)", () => {
     const reader = Reader.create(customEncode);
 
-    const version = reader.uint32();
-    const id = reader.string();
+    // Version
+    reader.uint32();
+    // Id
+    reader.string();
+    // Destinations
+    reader.uint32();
+    // Source
+    reader.uint32();
+    // Type
+    reader.uint32();
+    // Payload
+    reader.bytes();
+    // Timestamp
+    reader.uint32();
+  })
+  .add("Reader (version)", () => {
+    const reader = Reader.create(customEncode);
+
+    // Version
+    reader.uint32();
+  })
+  .add("Reader (id)", () => {
+    const reader = Reader.create(customEncode);
+
+    // Version
+    reader.uint32();
+    // Id
+    reader.string();
   })
   .on("cycle", (event) => {
     console.log(String(event.target));
