@@ -39,7 +39,7 @@ writeStream.end(() => {
     reader.pos = position;
 
     while (chunky.length - position >= 10) {
-      const length = reader.uint32();
+      const length = reader.uint32() + reader.pos - position;
       reader.pos = position;
 
       if (chunky.length - position >= length) {
