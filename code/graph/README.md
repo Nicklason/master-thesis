@@ -1,6 +1,6 @@
 # Graphs
 
-Scripts for generating things used for the network.
+Scripts for generating things used for the network. This evolved from the second prototype and is used to set up the third prototype.
 
 ## Graph
 

@@ -1,0 +1,422 @@
+version: "3"
+services:
+  redis-1:
+    image: redis:alpine
+    container_name: redis-1
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-1:/data
+  connector-1:
+    image: connector
+    container_name: connector-1
+    volumes:
+      - ./data/connector-1:/data
+    environment:
+      NODE_ID: "1"
+      CONNECTED_NODES: 2,10
+  redis-2:
+    image: redis:alpine
+    container_name: redis-2
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-2:/data
+  connector-2:
+    image: connector
+    container_name: connector-2
+    volumes:
+      - ./data/connector-2:/data
+    environment:
+      NODE_ID: "2"
+      CONNECTED_NODES: 1,3,5
+  redis-3:
+    image: redis:alpine
+    container_name: redis-3
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-3:/data
+  connector-3:
+    image: connector
+    container_name: connector-3
+    volumes:
+      - ./data/connector-3:/data
+    environment:
+      NODE_ID: "3"
+      CONNECTED_NODES: 2,4,16
+  redis-4:
+    image: redis:alpine
+    container_name: redis-4
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-4:/data
+  connector-4:
+    image: connector
+    container_name: connector-4
+    volumes:
+      - ./data/connector-4:/data
+    environment:
+      NODE_ID: "4"
+      CONNECTED_NODES: 3,5
+  redis-5:
+    image: redis:alpine
+    container_name: redis-5
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-5:/data
+  connector-5:
+    image: connector
+    container_name: connector-5
+    volumes:
+      - ./data/connector-5:/data
+    environment:
+      NODE_ID: "5"
+      CONNECTED_NODES: 4,6,2
+  redis-6:
+    image: redis:alpine
+    container_name: redis-6
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-6:/data
+  connector-6:
+    image: connector
+    container_name: connector-6
+    volumes:
+      - ./data/connector-6:/data
+    environment:
+      NODE_ID: "6"
+      CONNECTED_NODES: "5"
+  redis-7:
+    image: redis:alpine
+    container_name: redis-7
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-7:/data
+  connector-7:
+    image: connector
+    container_name: connector-7
+    volumes:
+      - ./data/connector-7:/data
+    environment:
+      NODE_ID: "7"
+      CONNECTED_NODES: 8,9,16
+  redis-8:
+    image: redis:alpine
+    container_name: redis-8
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-8:/data
+  connector-8:
+    image: connector
+    container_name: connector-8
+    volumes:
+      - ./data/connector-8:/data
+    environment:
+      NODE_ID: "8"
+      CONNECTED_NODES: 7,9,17,19
+  redis-9:
+    image: redis:alpine
+    container_name: redis-9
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-9:/data
+  connector-9:
+    image: connector
+    container_name: connector-9
+    volumes:
+      - ./data/connector-9:/data
+    environment:
+      NODE_ID: "9"
+      CONNECTED_NODES: 8,7,28
+  redis-10:
+    image: redis:alpine
+    container_name: redis-10
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-10:/data
+  connector-10:
+    image: connector
+    container_name: connector-10
+    volumes:
+      - ./data/connector-10:/data
+    environment:
+      NODE_ID: "10"
+      CONNECTED_NODES: 11,15,1
+  redis-11:
+    image: redis:alpine
+    container_name: redis-11
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-11:/data
+  connector-11:
+    image: connector
+    container_name: connector-11
+    volumes:
+      - ./data/connector-11:/data
+    environment:
+      NODE_ID: "11"
+      CONNECTED_NODES: 10,12
+  redis-12:
+    image: redis:alpine
+    container_name: redis-12
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-12:/data
+  connector-12:
+    image: connector
+    container_name: connector-12
+    volumes:
+      - ./data/connector-12:/data
+    environment:
+      NODE_ID: "12"
+      CONNECTED_NODES: 11,13
+  redis-13:
+    image: redis:alpine
+    container_name: redis-13
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-13:/data
+  connector-13:
+    image: connector
+    container_name: connector-13
+    volumes:
+      - ./data/connector-13:/data
+    environment:
+      NODE_ID: "13"
+      CONNECTED_NODES: 12,14
+  redis-14:
+    image: redis:alpine
+    container_name: redis-14
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-14:/data
+  connector-14:
+    image: connector
+    container_name: connector-14
+    volumes:
+      - ./data/connector-14:/data
+    environment:
+      NODE_ID: "14"
+      CONNECTED_NODES: 13,15,25
+  redis-15:
+    image: redis:alpine
+    container_name: redis-15
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-15:/data
+  connector-15:
+    image: connector
+    container_name: connector-15
+    volumes:
+      - ./data/connector-15:/data
+    environment:
+      NODE_ID: "15"
+      CONNECTED_NODES: 14,16,10
+  redis-16:
+    image: redis:alpine
+    container_name: redis-16
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-16:/data
+  connector-16:
+    image: connector
+    container_name: connector-16
+    volumes:
+      - ./data/connector-16:/data
+    environment:
+      NODE_ID: "16"
+      CONNECTED_NODES: 15,3,7
+  redis-17:
+    image: redis:alpine
+    container_name: redis-17
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-17:/data
+  connector-17:
+    image: connector
+    container_name: connector-17
+    volumes:
+      - ./data/connector-17:/data
+    environment:
+      NODE_ID: "17"
+      CONNECTED_NODES: 18,8,20
+  redis-18:
+    image: redis:alpine
+    container_name: redis-18
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-18:/data
+  connector-18:
+    image: connector
+    container_name: connector-18
+    volumes:
+      - ./data/connector-18:/data
+    environment:
+      NODE_ID: "18"
+      CONNECTED_NODES: 17,21
+  redis-19:
+    image: redis:alpine
+    container_name: redis-19
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-19:/data
+  connector-19:
+    image: connector
+    container_name: connector-19
+    volumes:
+      - ./data/connector-19:/data
+    environment:
+      NODE_ID: "19"
+      CONNECTED_NODES: 20,26,8
+  redis-20:
+    image: redis:alpine
+    container_name: redis-20
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-20:/data
+  connector-20:
+    image: connector
+    container_name: connector-20
+    volumes:
+      - ./data/connector-20:/data
+    environment:
+      NODE_ID: "20"
+      CONNECTED_NODES: 19,21,27,17
+  redis-21:
+    image: redis:alpine
+    container_name: redis-21
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-21:/data
+  connector-21:
+    image: connector
+    container_name: connector-21
+    volumes:
+      - ./data/connector-21:/data
+    environment:
+      NODE_ID: "21"
+      CONNECTED_NODES: 20,22,23,18
+  redis-22:
+    image: redis:alpine
+    container_name: redis-22
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-22:/data
+  connector-22:
+    image: connector
+    container_name: connector-22
+    volumes:
+      - ./data/connector-22:/data
+    environment:
+      NODE_ID: "22"
+      CONNECTED_NODES: "21"
+  redis-23:
+    image: redis:alpine
+    container_name: redis-23
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-23:/data
+  connector-23:
+    image: connector
+    container_name: connector-23
+    volumes:
+      - ./data/connector-23:/data
+    environment:
+      NODE_ID: "23"
+      CONNECTED_NODES: 21,24
+  redis-24:
+    image: redis:alpine
+    container_name: redis-24
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-24:/data
+  connector-24:
+    image: connector
+    container_name: connector-24
+    volumes:
+      - ./data/connector-24:/data
+    environment:
+      NODE_ID: "24"
+      CONNECTED_NODES: "23"
+  redis-25:
+    image: redis:alpine
+    container_name: redis-25
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-25:/data
+  connector-25:
+    image: connector
+    container_name: connector-25
+    volumes:
+      - ./data/connector-25:/data
+    environment:
+      NODE_ID: "25"
+      CONNECTED_NODES: 26,28,14
+  redis-26:
+    image: redis:alpine
+    container_name: redis-26
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-26:/data
+  connector-26:
+    image: connector
+    container_name: connector-26
+    volumes:
+      - ./data/connector-26:/data
+    environment:
+      NODE_ID: "26"
+      CONNECTED_NODES: 25,27,19
+  redis-27:
+    image: redis:alpine
+    container_name: redis-27
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-27:/data
+  connector-27:
+    image: connector
+    container_name: connector-27
+    volumes:
+      - ./data/connector-27:/data
+    environment:
+      NODE_ID: "27"
+      CONNECTED_NODES: 26,28,20
+  redis-28:
+    image: redis:alpine
+    container_name: redis-28
+    ports:
+      - 6379
+    volumes:
+      - ./data/redis-28:/data
+  connector-28:
+    image: connector
+    container_name: connector-28
+    volumes:
+      - ./data/connector-28:/data
+    environment:
+      NODE_ID: "28"
+      CONNECTED_NODES: 27,25,9
